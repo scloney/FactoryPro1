@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factory Pro Tools | Furniture Manufacturing Solutions</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff6b35;
+            --secondary: #1a1a1a;
+            --accent: #f7931e;
+            --bg: #0a0a0a;
+            --card-bg: #1a1a1a;
+            --text: #e0e0e0;
+            --text-muted: #888;
+            --border: #333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Work Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Background Pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 107, 53, 0.03) 2px, rgba(255, 107, 53, 0.03) 4px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255, 107, 53, 0.03) 2px, rgba(255, 107, 53, 0.03) 4px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        header {
+            padding: 2rem 0;
+            border-bottom: 2px solid var(--border);
+            background: rgba(26, 26, 26, 0.8);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .logo h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        nav ul {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        nav a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.3s;
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 6rem 0 4rem;
+            text-align: center;
+        }
+
+        .hero h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 4.5rem;
+            letter-spacing: 4px;
+            margin-bottom: 1rem;
+            line-height: 1.1;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            color: var(--text-muted);
+            max-width: 700px;
+            margin: 0 auto 3rem;
+            animation: fadeInUp 0.8s ease-out 0.2s backwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Tools Grid */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .tool-card {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            padding: 2.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s;
+            animation: fadeInUp 0.8s ease-out backwards;
+        }
+
+        .tool-card:nth-child(1) { animation-delay: 0.3s; }
+        .tool-card:nth-child(2) { animation-delay: 0.4s; }
+        .tool-card:nth-child(3) { animation-delay: 0.5s; }
+        .tool-card:nth-child(4) { animation-delay: 0.6s; }
+
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 107, 53, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .tool-card:hover::before {
+            left: 100%;
+        }
+
+        .tool-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.2);
+        }
+
+        .tool-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+        }
+
+        .tool-card h3 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            letter-spacing: 2px;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .tool-card p {
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+        }
+
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            padding: 0.8rem 2rem;
+            text-decoration: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(255, 107, 53, 0.4);
+        }
+
+        /* Footer */
+        footer {
+            border-top: 2px solid var(--border);
+            padding: 3rem 0;
+            text-align: center;
+            margin-top: 4rem;
+        }
+
+        footer p {
+            color: var(--text-muted);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            nav ul {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .hero h2 {
+                font-size: 3rem;
+            }
+
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon"></div>
+                    <h1>Factory Pro Tools</h1>
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="#tools">Tools</a></li>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                        <li>
+                            <form th:action="@{/logout}" method="post" style="display: inline;">
+                                <button type="submit" style="background:none; border:none; color:var(--text); font-family:inherit; font-weight:600; text-transform:uppercase; font-size:0.9rem; letter-spacing:1px; cursor:pointer; padding:0; position:relative;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text)'">
+                                    <i class="fas fa-sign-out-alt"></i> Logout
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <section class="hero">
+                <h2>Precision Tools for<br>Modern Manufacturing</h2>
+                <p>Streamline your furniture manufacturing process with our suite of professional-grade tools designed for efficiency and precision</p>
+            </section>
+
+            <section id="tools" class="tools-grid">
+                <!-- Tool 1: Plywood Optimizer -->
+                <div class="tool-card">
+                    <div class="tool-icon">📐</div>
+                    <h3>Plywood Optimizer</h3>
+                    <p>Advanced cutting optimization using MaxRect algorithm with real-time visualization and material waste minimization</p>
+                    <a href="/optimizer" class="btn">Launch Tool</a>
+                </div>
+
+                <!-- Tool 2: Quotation Maker -->
+                <div class="tool-card">
+                    <div class="tool-icon">💰</div>
+                    <h3>Quotation Maker</h3>
+                    <p>Professional quotation generation with customizable templates, pricing calculator, and PDF export capabilities</p>
+                    <a href="/quotation" class="btn">Launch Tool</a>
+                </div>
+				<!-- Tool 7: QT list Management -->
+											  				<div class="tool-card">
+											  				    <div class="tool-icon">👥</div>
+											  				    <h3>Quotation List</h3>
+											  				    <p>Track Quotation List</p>
+											  				    <a href="/quotations-list" class="btn">Launch Tool</a>
+											  				</div>
+
+                <!-- Tool 3: Bill Maker -->
+                <div class="tool-card">
+                    <div class="tool-icon">🧾</div>
+                    <h3>Bill Maker</h3>
+                    <p>Generate professional invoices and bills with automated GST calculations, payment tracking, and print formats</p>
+                    <a href="/bill" class="btn">Launch Tool</a>
+                </div>
+
+                <!-- Tool 3b: Bills List -->
+                <div class="tool-card">
+                    <div class="tool-icon">📑</div>
+                    <h3>Bills & Invoices</h3>
+                    <p>View all saved invoices, track payment status (Draft / Paid / Overdue), and manage your complete billing history</p>
+                    <a href="/bills" class="btn">View Bills</a>
+                </div>
+
+                <!-- Tool 4: Inventory Management -->
+                <div class="tool-card">
+                    <div class="tool-icon">📦</div>
+                    <h3>Inventory Management</h3>
+                    <p>Track stock levels, manage products, monitor movements with real-time alerts and comprehensive reporting dashboard</p>
+                    <a href="/inventory" class="btn">Launch Tool</a>
+                </div>
+
+                <!-- Tool 4a: Barcode Printing -->
+                <div class="tool-card">
+                    <div class="tool-icon">🏷️</div>
+                    <h3>Print Barcodes</h3>
+                    <p>Generate, view, and print high-quality barcodes and QR codes for all inventory products individually or in bulk</p>
+                    <a href="/barcode/print" class="btn">Launch Tool</a>
+                </div>
+
+                <!-- Tool 4b: Mobile Barcode Scan -->
+                <div class="tool-card">
+                    <div class="tool-icon">📷</div>
+                    <h3>Scan & Update Stock</h3>
+                    <p>Perform rapid mobile camera scans to decode product barcodes/QR codes and perform instant Stock IN or Stock OUT adjustments</p>
+                    <a href="/barcode/scan" class="btn">Launch Tool</a>
+                </div>
+				
+				<!--supplier and Purchaseorder-->
+				<div class="tool-card">
+				                  <div class="tool-icon">🤝</div>
+				                  <h3>Supplier Management</h3>
+				                  <p>Manage supplier relationships, track credit limits, monitor outstanding balances, and maintain vendor database</p>
+				                  <a href="/suppliers" class="btn">Launch Tool</a>
+				              </div>
+
+				              <div class="tool-card">
+				                  <div class="tool-icon">🛒</div>
+				                  <h3>Purchase Orders</h3>
+				                  <p>Create and manage purchase orders with approval workflow, delivery tracking, and automatic inventory updates</p>
+				                  <a href="/purchase-orders" class="btn">Launch Tool</a>
+				              </div>
+							  
+							  <!-- Tool 7: Customer Management -->
+							  				<div class="tool-card">
+							  				    <div class="tool-icon">👥</div>
+							  				    <h3>Customer Management</h3>
+							  				    <p>Track customer data, monitor outstanding payments, manage order history, and analyze sales performance</p>
+							  				    <a href="/customers" class="btn">Launch Tool</a>
+							  				</div>
+											
+											
+											<!-- Tool 8: Sales Order -->
+											<div class="tool-card">
+											    <div class="tool-icon">📋</div>
+											    <h3>Sales Order</h3>
+											    <p>Create and manage sales orders, track order status, link with quotations, and automatically update inventory and billing records</p>
+											    <a href="/sales-orders" class="btn">Launch Tool</a>
+											</div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Factory Pro Tools. All rights reserved. | Furniture Manufacturing Solutions</p>
+        </div>
+    </footer>
+</body>
+</html>

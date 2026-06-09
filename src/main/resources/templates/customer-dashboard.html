@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Account | Factory Pro Tools</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00c6ff;
+            --accent: #0072ff;
+            --bg: #0a0a0f;
+            --card-bg: #12122a;
+            --card-bg2: #0e0e20;
+            --text: #e0e0f0;
+            --text-muted: #7070a0;
+            --border: #2a2a4a;
+            --success: #38ef7d;
+            --danger: #ff6b6b;
+            --warning: #ffc107;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Work Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,198,255,0.02) 2px, rgba(0,198,255,0.02) 4px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,198,255,0.02) 2px, rgba(0,198,255,0.02) 4px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ── HEADER ─────────────────────────────────────────── */
+        header {
+            background: rgba(18,18,42,0.95);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .logo-area h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.6rem;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, var(--accent), var(--primary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+        .logo-area p { font-size: 0.75rem; color: var(--text-muted); letter-spacing: 1px; }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .customer-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: rgba(0,198,255,0.1);
+            border: 1px solid rgba(0,198,255,0.2);
+            padding: 0.4rem 0.9rem;
+            font-size: 0.85rem;
+            color: var(--primary);
+        }
+
+        .logout-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(255,107,107,0.1);
+            border: 1px solid rgba(255,107,107,0.3);
+            color: var(--danger);
+            padding: 0.4rem 0.9rem;
+            font-size: 0.85rem;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .logout-btn:hover { background: rgba(255,107,107,0.2); }
+
+        /* ── CONTAINER ───────────────────────────────────────── */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── WELCOME BANNER ──────────────────────────────────── */
+        .welcome-banner {
+            background: linear-gradient(135deg, #0072ff, #00c6ff);
+            padding: 2rem 2.5rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .welcome-banner::before {
+            content: '';
+            position: absolute;
+            right: -60px; top: -60px;
+            width: 200px; height: 200px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 50%;
+        }
+        .welcome-banner::after {
+            content: '';
+            position: absolute;
+            right: 60px; bottom: -80px;
+            width: 150px; height: 150px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+        }
+        .welcome-banner h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            letter-spacing: 2px;
+            color: white;
+            margin-bottom: 0.3rem;
+            position: relative;
+        }
+        .welcome-banner p { color: rgba(255,255,255,0.85); font-size: 0.95rem; position: relative; }
+
+        /* ── STATS ───────────────────────────────────────────── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.2rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.3s, transform 0.3s;
+        }
+        .stat-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 3px; height: 100%;
+            background: linear-gradient(180deg, var(--accent), var(--primary));
+        }
+
+        .stat-icon {
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        .icon-blue { background: rgba(0,198,255,0.15); color: var(--primary); }
+        .icon-green { background: rgba(56,239,125,0.12); color: var(--success); }
+        .icon-orange { background: rgba(255,193,7,0.12); color: var(--warning); }
+        .icon-red { background: rgba(255,107,107,0.12); color: var(--danger); }
+
+        .stat-info .value {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            letter-spacing: 1px;
+            line-height: 1;
+            color: var(--text);
+        }
+        .stat-info .label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-top: 0.2rem;
+        }
+
+        /* ── TABS ────────────────────────────────────────────── */
+        .tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 1.5rem;
+        }
+        .tab-btn {
+            padding: 0.8rem 1.8rem;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-family: 'Work Sans', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .tab-btn:hover { color: var(--text); }
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-count {
+            background: rgba(0,198,255,0.15);
+            color: var(--primary);
+            font-size: 0.75rem;
+            padding: 0.1rem 0.5rem;
+            border-radius: 20px;
+            font-weight: 700;
+        }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* ── SECTION HEADER ──────────────────────────────────── */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        .section-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.4rem;
+            letter-spacing: 2px;
+            color: var(--primary);
+        }
+
+        /* ── TABLE ───────────────────────────────────────────── */
+        .table-wrap {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        thead th {
+            background: rgba(0,198,255,0.07);
+            padding: 0.9rem 1rem;
+            text-align: left;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--primary);
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+        tbody td {
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid rgba(42,42,74,0.5);
+            font-size: 0.9rem;
+            color: var(--text);
+            vertical-align: middle;
+        }
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background: rgba(0,198,255,0.03); }
+
+        /* ── BADGES ──────────────────────────────────────────── */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.7rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .badge-draft    { background: rgba(108,117,125,0.15); color: #aaa; border: 1px solid rgba(108,117,125,0.3); }
+        .badge-sent     { background: rgba(0,198,255,0.12); color: var(--primary); border: 1px solid rgba(0,198,255,0.3); }
+        .badge-accepted { background: rgba(56,239,125,0.12); color: var(--success); border: 1px solid rgba(56,239,125,0.3); }
+        .badge-rejected { background: rgba(255,107,107,0.12); color: var(--danger); border: 1px solid rgba(255,107,107,0.3); }
+        .badge-expired  { background: rgba(255,193,7,0.12); color: var(--warning); border: 1px solid rgba(255,193,7,0.3); }
+        .badge-converted { background: rgba(111,66,193,0.15); color: #b39ddb; border: 1px solid rgba(111,66,193,0.3); }
+        .badge-paid     { background: rgba(56,239,125,0.12); color: var(--success); border: 1px solid rgba(56,239,125,0.3); }
+        .badge-overdue  { background: rgba(255,107,107,0.12); color: var(--danger); border: 1px solid rgba(255,107,107,0.3); }
+
+        /* ── EMPTY STATE ─────────────────────────────────────── */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+        .empty-state i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.4; }
+        .empty-state p { font-size: 1rem; margin-bottom: 0.3rem; }
+        .empty-state small { font-size: 0.85rem; }
+
+        /* ── AMOUNT ──────────────────────────────────────────── */
+        .amount { font-weight: 700; color: var(--text); }
+        .text-muted { color: var(--text-muted); font-size: 0.85rem; }
+
+        /* ── PROFILE CARD ────────────────────────────────────── */
+        .profile-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .profile-avatar {
+            width: 65px; height: 65px;
+            background: linear-gradient(135deg, var(--accent), var(--primary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: white;
+            flex-shrink: 0;
+        }
+        .profile-info h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.2rem; }
+        .profile-info p { font-size: 0.85rem; color: var(--text-muted); }
+        .profile-detail {
+            display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 0.5rem;
+        }
+        .profile-detail span {
+            display: flex; align-items: center; gap: 0.4rem;
+            font-size: 0.85rem; color: var(--text-muted);
+        }
+        .profile-detail span i { color: var(--primary); }
+
+        @media (max-width: 768px) {
+            .header-inner { flex-wrap: wrap; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .tab-btn { padding: 0.7rem 1rem; font-size: 0.8rem; }
+            .container { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── HEADER ────────────────────────────────────────────────────── -->
+<header>
+    <div class="header-inner">
+        <div class="logo-area">
+            <h1>Factory Pro Tools</h1>
+            <p>CUSTOMER PORTAL</p>
+        </div>
+        <div class="header-right">
+            <div class="customer-badge">
+                <i class="fas fa-user-circle"></i>
+                <span sec:authentication="name">Customer</span>
+            </div>
+            <form th:action="@{/customer/logout}" method="post" style="margin:0">
+                <button type="submit" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </form>
+        </div>
+    </div>
+</header>
+
+<!-- ── MAIN ──────────────────────────────────────────────────────── -->
+<div class="container">
+
+    <!-- Welcome Banner -->
+    <div class="welcome-banner">
+        <h2>Welcome Back, <span th:text="${customer?.customerName ?: 'Customer'}">Customer</span>!</h2>
+        <p th:if="${customer != null}">
+            <i class="fas fa-map-marker-alt"></i>
+            <span th:text="${customer.city != null ? customer.city + (customer.state != null ? ', ' + customer.state : '') : 'Valued Customer'}">City, State</span>
+            &nbsp;·&nbsp;
+            <i class="fas fa-phone"></i>
+            <span th:text="${customer.phone}">Phone</span>
+        </p>
+    </div>
+
+    <!-- Profile Card -->
+    <div class="profile-card" th:if="${customer != null}">
+        <div class="profile-avatar">
+            <i class="fas fa-building"></i>
+        </div>
+        <div class="profile-info">
+            <h3 th:text="${customer.customerName}">Company Name</h3>
+            <p th:text="${customer.customerType + ' Customer'}">Type</p>
+            <div class="profile-detail">
+                <span th:if="${customer.phone}">
+                    <i class="fas fa-phone"></i>
+                    <span th:text="${customer.phone}">Phone</span>
+                </span>
+                <span th:if="${customer.email}">
+                    <i class="fas fa-envelope"></i>
+                    <span th:text="${customer.email}">Email</span>
+                </span>
+                <span th:if="${customer.gstin}">
+                    <i class="fas fa-id-card"></i>
+                    <span th:text="${'GSTIN: ' + customer.gstin}">GSTIN</span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon icon-blue"><i class="fas fa-file-alt"></i></div>
+            <div class="stat-info">
+                <div class="value" th:text="${totalQuotations}">0</div>
+                <div class="label">Total Quotations</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon icon-orange"><i class="fas fa-clock"></i></div>
+            <div class="stat-info">
+                <div class="value" th:text="${pendingQuotations}">0</div>
+                <div class="label">Pending Quotes</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon icon-green"><i class="fas fa-receipt"></i></div>
+            <div class="stat-info">
+                <div class="value" th:text="${totalBills}">0</div>
+                <div class="label">Total Bills</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon icon-red"><i class="fas fa-rupee-sign"></i></div>
+            <div class="stat-info">
+                <div class="value" th:text="${'₹' + #numbers.formatDecimal(totalBillAmount, 0, 'COMMA', 0, 'POINT')}">₹0</div>
+                <div class="label">Total Billed</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('quotations', this)">
+            <i class="fas fa-file-alt"></i>
+            My Quotations
+            <span class="tab-count" th:text="${totalQuotations}">0</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('bills', this)">
+            <i class="fas fa-receipt"></i>
+            My Bills
+            <span class="tab-count" th:text="${totalBills}">0</span>
+        </button>
+    </div>
+
+    <!-- ── QUOTATIONS TAB ──────────────────────────────────────── -->
+    <div id="tab-quotations" class="tab-panel active">
+        <div class="section-header">
+            <div class="section-title">Quotations</div>
+        </div>
+
+        <div class="table-wrap" th:if="${!#lists.isEmpty(quotations)}">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Quotation No.</th>
+                        <th>Date</th>
+                        <th>Valid Until</th>
+                        <th>Items</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="q, iter : ${quotations}">
+                        <td class="text-muted" th:text="${iter.count}">1</td>
+                        <td>
+                            <strong th:text="${q.quotationNumber}">QT-001</strong>
+                        </td>
+                        <td th:text="${q.date}">2024-01-01</td>
+                        <td>
+                            <span th:if="${q.validUntil != null}" th:text="${q.validUntil}">—</span>
+                            <span th:if="${q.validUntil == null}" class="text-muted">—</span>
+                        </td>
+                        <td th:text="${#lists.size(q.items)}">0</td>
+                        <td class="amount">
+                            ₹<span th:text="${#numbers.formatDecimal(q.grandTotal, 0, 'COMMA', 2, 'POINT')}">0.00</span>
+                        </td>
+                        <td>
+                            <span th:switch="${q.status?.name()}">
+                                <span th:case="'DRAFT'"     class="badge badge-draft">Draft</span>
+                                <span th:case="'SENT'"      class="badge badge-sent">Sent</span>
+                                <span th:case="'ACCEPTED'"  class="badge badge-accepted">Accepted</span>
+                                <span th:case="'REJECTED'"  class="badge badge-rejected">Rejected</span>
+                                <span th:case="'EXPIRED'"   class="badge badge-expired">Expired</span>
+                                <span th:case="'CONVERTED'" class="badge badge-converted">Converted</span>
+                                <span th:case="*"           class="badge badge-draft" th:text="${q.status}">—</span>
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="empty-state" th:if="${#lists.isEmpty(quotations)}">
+            <i class="fas fa-file-alt"></i>
+            <p>No quotations found</p>
+            <small>Your quotations will appear here once your sales representative creates them.</small>
+        </div>
+    </div>
+
+    <!-- ── BILLS TAB ──────────────────────────────────────────── -->
+    <div id="tab-bills" class="tab-panel">
+        <div class="section-header">
+            <div class="section-title">Bills &amp; Invoices</div>
+        </div>
+
+        <div class="table-wrap" th:if="${!#lists.isEmpty(bills)}">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Bill No.</th>
+                        <th>Date</th>
+                        <th>Due Date</th>
+                        <th>Items</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="b, iter : ${bills}">
+                        <td class="text-muted" th:text="${iter.count}">1</td>
+                        <td>
+                            <strong th:text="${b.billNumber}">BILL-001</strong>
+                            <div class="text-muted" th:if="${b.sourceQuotationNumber != null}"
+                                 th:text="${'From ' + b.sourceQuotationNumber}">From QT-001</div>
+                        </td>
+                        <td th:text="${b.date}">2024-01-01</td>
+                        <td>
+                            <span th:if="${b.dueDate != null}" th:text="${b.dueDate}">—</span>
+                            <span th:if="${b.dueDate == null}" class="text-muted">—</span>
+                        </td>
+                        <td th:text="${#lists.size(b.items)}">0</td>
+                        <td class="amount">
+                            ₹<span th:text="${#numbers.formatDecimal(b.grandTotal, 0, 'COMMA', 2, 'POINT')}">0.00</span>
+                        </td>
+                        <td>
+                            <span th:switch="${b.status}">
+                                <span th:case="'DRAFT'"   class="badge badge-draft">Draft</span>
+                                <span th:case="'PAID'"    class="badge badge-paid">Paid</span>
+                                <span th:case="'OVERDUE'" class="badge badge-overdue">Overdue</span>
+                                <span th:case="*"         class="badge badge-draft" th:text="${b.status}">—</span>
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="empty-state" th:if="${#lists.isEmpty(bills)}">
+            <i class="fas fa-receipt"></i>
+            <p>No bills found</p>
+            <small>Your invoices will appear here once they are issued.</small>
+        </div>
+    </div>
+
+</div><!-- /container -->
+
+<script>
+    function switchTab(name, btn) {
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + name).classList.add('active');
+        btn.classList.add('active');
+    }
+</script>
+</body>
+</html>

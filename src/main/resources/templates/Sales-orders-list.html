@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Orders | Factory Pro Tools</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff6b35;
+            --accent: #f7931e;
+            --bg: #0a0a0a;
+            --card-bg: #1a1a1a;
+            --text: #e0e0e0;
+            --text-muted: #888;
+            --border: #333;
+            --success: #38ef7d;
+            --info: #667eea;
+            --warning: #f7931e;
+            --danger: #dc3545;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Work Sans', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background-image:
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,107,53,0.03) 2px, rgba(255,107,53,0.03) 4px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255,107,53,0.03) 2px, rgba(255,107,53,0.03) 4px);
+            pointer-events: none; z-index: 0;
+        }
+        .container { max-width: 1600px; margin: 0 auto; padding: 0 2rem; position: relative; z-index: 1; }
+
+        /* HEADER */
+        header { padding: 1.5rem 0; border-bottom: 2px solid var(--border); background: rgba(26,26,26,0.95); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 100; }
+        .header-content { display: flex; justify-content: space-between; align-items: center; }
+        .page-title { display: flex; align-items: center; gap: 1rem; }
+        .page-icon { width: 50px; height: 50px; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%); }
+        .page-title h1 { font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; letter-spacing: 2px; background: linear-gradient(90deg, var(--primary), var(--accent)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+
+        /* BUTTONS */
+        .btn { display: inline-block; background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; padding: 0.8rem 2rem; text-decoration: none; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s; border: none; cursor: pointer; font-size: 0.9rem; font-family: 'Work Sans', sans-serif; }
+        .btn:hover { transform: scale(1.05); box-shadow: 0 5px 20px rgba(255,107,53,0.4); }
+        .btn-secondary { background: var(--border); color: var(--text); }
+        .btn-secondary:hover { background: var(--text-muted); box-shadow: none; }
+        .btn-green { background: linear-gradient(135deg, #11998e, #38ef7d); color: var(--bg); }
+        .btn-green:hover { box-shadow: 0 5px 20px rgba(56,239,125,0.4); }
+
+        /* STATS */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1.5rem; margin: 2rem 0; }
+        .stat-card { background: var(--card-bg); border: 2px solid var(--border); padding: 1.5rem; transition: all 0.3s; }
+        .stat-card:hover { border-color: var(--primary); transform: translateY(-3px); }
+        .stat-icon { width: 50px; height: 50px; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1rem; clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%); }
+        .stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 2px; color: var(--primary); }
+        .stat-label { color: var(--text-muted); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+
+        /* CONTENT CARD */
+        .content-card { background: var(--card-bg); border: 2px solid var(--border); margin-bottom: 2rem; }
+        .content-header { padding: 1.5rem 2rem; border-bottom: 2px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, rgba(255,107,53,0.08), rgba(247,147,30,0.08)); }
+        .content-header h2 { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: 2px; color: var(--primary); }
+        .content-body { padding: 2rem; }
+
+        /* FILTERS */
+        .filters { display: grid; grid-template-columns: 1fr 1fr 2fr auto; gap: 1rem; margin-bottom: 1.5rem; }
+        .form-control, .form-select {
+            background: var(--bg); border: 2px solid var(--border); color: var(--text);
+            padding: 0.8rem 1rem; font-family: 'Work Sans', sans-serif; transition: all 0.3s; width: 100%;
+        }
+        .form-control:focus, .form-select:focus { outline: none; border-color: var(--primary); }
+        .form-select option { background: var(--card-bg); }
+
+        /* TABLE */
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: var(--bg); }
+        th { padding: 1rem; text-align: left; font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 1px; color: var(--primary); border-bottom: 2px solid var(--border); white-space: nowrap; }
+        td { padding: 0.9rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        tbody tr { transition: all 0.2s; }
+        tbody tr:hover { background: rgba(255,107,53,0.04); }
+        tbody tr.overdue { background: rgba(220,53,69,0.06); }
+        tbody tr.overdue:hover { background: rgba(220,53,69,0.1); }
+
+        /* STATUS BADGES */
+        .status-badge { display: inline-block; padding: 0.25rem 0.8rem; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; clip-path: polygon(6% 0%, 94% 0%, 100% 50%, 94% 100%, 6% 100%, 0% 50%); white-space: nowrap; }
+        .status-pending      { background: #856404; color: #fff3cd; }
+        .status-in_production{ background: #084298; color: #cfe2ff; }
+        .status-ready        { background: #0f5132; color: #d1e7dd; }
+        .status-delivered    { background: var(--success); color: var(--bg); }
+        .status-cancelled    { background: #555; color: #fff; }
+
+        /* PAYMENT BADGES */
+        .payment-badge { display: inline-block; padding: 0.2rem 0.7rem; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; border-radius: 2px; }
+        .payment-unpaid  { background: rgba(220,53,69,0.12); color: #dc3545; border: 1px solid rgba(220,53,69,0.4); }
+        .payment-partial { background: rgba(247,147,30,0.12); color: var(--accent); border: 1px solid rgba(247,147,30,0.4); }
+        .payment-paid    { background: rgba(56,239,125,0.12); color: var(--success); border: 1px solid rgba(56,239,125,0.4); }
+
+        /* OVERDUE BADGE */
+        .overdue-badge { display: inline-block; background: var(--danger); color: white; font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.5rem; letter-spacing: 1px; text-transform: uppercase; margin-top: 3px; }
+
+        /* ACTION BUTTONS */
+        .action-btn { background: var(--border); color: var(--text); border: none; padding: 0.4rem 0.65rem; margin: 0.1rem; cursor: pointer; transition: all 0.2s; font-size: 0.78rem; font-family: 'Work Sans', sans-serif; font-weight: 600; white-space: nowrap; }
+        .action-btn:hover { background: var(--primary); color: white; }
+        .action-btn.btn-start    { background: rgba(102,126,234,0.12); color: var(--info);    border: 1px solid rgba(102,126,234,0.4); }
+        .action-btn.btn-start:hover    { background: var(--info); color: white; }
+        .action-btn.btn-ready    { background: rgba(56,239,125,0.1);  color: var(--success); border: 1px solid rgba(56,239,125,0.35); }
+        .action-btn.btn-ready:hover    { background: var(--success); color: var(--bg); }
+        .action-btn.btn-deliver  { background: rgba(255,107,53,0.1);  color: var(--primary); border: 1px solid rgba(255,107,53,0.35); }
+        .action-btn.btn-deliver:hover  { background: var(--primary); color: white; }
+        .action-btn.btn-pay      { background: rgba(247,147,30,0.12); color: var(--accent);  border: 1px solid rgba(247,147,30,0.4); }
+        .action-btn.btn-pay:hover      { background: var(--accent); color: white; }
+        .action-btn.btn-cancel   { background: rgba(220,53,69,0.1);   color: var(--danger);  border: 1px solid rgba(220,53,69,0.35); }
+        .action-btn.btn-cancel:hover   { background: var(--danger); color: white; }
+
+        /* MODAL */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 999; align-items: center; justify-content: center; padding: 1rem; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--card-bg); border: 2px solid var(--primary); width: 100%; max-width: 440px; animation: modalIn 0.3s ease; }
+        @keyframes modalIn { from { transform: translateY(-25px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-header { padding: 1.5rem 2rem; border-bottom: 2px solid var(--border); background: linear-gradient(135deg, rgba(255,107,53,0.12), rgba(247,147,30,0.12)); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 2px; color: var(--primary); }
+        .modal-close { background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer; transition: color 0.2s; }
+        .modal-close:hover { color: var(--primary); }
+        .modal-body { padding: 2rem; }
+        .modal-footer { padding: 1.2rem 2rem; border-top: 2px solid var(--border); display: flex; gap: 1rem; justify-content: flex-end; }
+        .form-group { margin-bottom: 1.2rem; }
+        .form-label { display: block; color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.4rem; }
+        .qt-banner { background: rgba(255,107,53,0.07); border-left: 3px solid var(--primary); padding: 0.8rem 1rem; margin-bottom: 1.5rem; font-size: 0.88rem; }
+        .qt-banner strong { color: var(--primary); }
+
+        /* TOAST */
+        .toast { position: fixed; bottom: 2rem; right: 2rem; z-index: 9999; padding: 1rem 2rem; font-weight: 700; font-size: 0.9rem; letter-spacing: 1px; animation: modalIn 0.3s ease; }
+
+        @media (max-width: 768px) { .filters { grid-template-columns: 1fr; } }
+
+        /* Unified Navigation Styles */
+        .nav-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .nav-btn {
+            display: inline-block;
+            padding: 0.6rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text, #e0e0e0) !important;
+            text-decoration: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            border-radius: 4px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, var(--primary, #ff6b35), var(--accent, #f7931e));
+            color: white !important;
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(135deg, var(--primary, #ff6b35), var(--accent, #f7931e));
+            color: white !important;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.2);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <div class="header-content">
+            <div class="page-title">
+                <div class="page-icon"><i class="fas fa-boxes"></i></div>
+                <h1>Sales Orders</h1>
+            </div>
+            <div class="nav-buttons">
+                <a href="/" class="nav-btn" title="Home">Home</a>
+                <a href="/optimizer" class="nav-btn" title="Plywood Optimizer">Optimizer</a>
+                <a href="/quotations-list" class="nav-btn" title="Quotations List">Quotations</a>
+                <a href="/sales-orders" class="nav-btn active" title="Sales Orders">Sales Orders</a>
+                <a href="/bills" class="nav-btn" title="Bills List">Bills</a>
+                <a href="/inventory" class="nav-btn" title="Inventory Management">Inventory</a>
+                <a href="/suppliers" class="nav-btn" title="Supplier Management">Suppliers</a>
+                <a href="/purchase-orders" class="nav-btn" title="Purchase Orders">Purchase Orders</a>
+                <a href="/customers" class="nav-btn" title="Customer Management">Customers</a>
+                <a href="/barcode/print" class="nav-btn" title="Print Barcodes">Barcode Print</a>
+                <a href="/barcode/scan" class="nav-btn" title="Scan &amp; Update Stock">Barcode Scan</a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main>
+<div class="container">
+
+    <!-- Stats -->
+    <div class="stats-grid" id="statsCards">
+        <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value" id="stat_total">–</div><div class="stat-label">Total Orders</div></div>
+        <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-value" id="stat_pending">–</div><div class="stat-label">Pending</div></div>
+        <div class="stat-card"><div class="stat-icon">🚚</div><div class="stat-value" id="stat_delivered">–</div><div class="stat-label">Delivered</div></div>
+        <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value" id="stat_payments">₹–</div><div class="stat-label">Pending Payments</div></div>
+    </div>
+
+    <!-- Filters -->
+    <div class="content-card">
+        <div class="content-header">
+            <h2><i class="fas fa-filter"></i> Filters</h2>
+        </div>
+        <div class="content-body">
+            <div class="filters">
+                <select class="form-select" id="statusFilter">
+                    <option value="">All Statuses</option>
+                    <option value="PENDING">⏳ Pending</option>
+                    <option value="IN_PRODUCTION">🔨 In Production</option>
+                    <option value="READY">✅ Ready</option>
+                    <option value="DELIVERED">🚚 Delivered</option>
+                    <option value="CANCELLED">❌ Cancelled</option>
+                </select>
+                <select class="form-select" id="paymentFilter">
+                    <option value="">All Payments</option>
+                    <option value="UNPAID">Unpaid</option>
+                    <option value="PARTIAL">Partial</option>
+                    <option value="PAID">Paid</option>
+                </select>
+                <input type="text" class="form-control" id="searchInput" placeholder="🔍  Order number or customer...">
+                <button class="btn btn-secondary" onclick="resetFilters()"><i class="fas fa-redo"></i> Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="content-card">
+        <div class="content-header">
+            <h2><i class="fas fa-boxes"></i> All Orders</h2>
+        </div>
+        <div class="content-body">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Quotation #</th>
+                            <th>Items</th>
+                            <th>Amount</th>
+                            <th>Payment</th>
+                            <th>Status</th>
+                            <th>Delivery</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                        <tr><td colspan="10" style="text-align:center;color:var(--text-muted);padding:3rem;">Loading orders...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+</main>
+
+<!-- PAYMENT MODAL -->
+<div class="modal-overlay" id="paymentModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>💰 Add Payment</h3>
+            <button class="modal-close" onclick="closePaymentModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="qt-banner">
+                Order: <strong id="pay_orderNumber">-</strong> &nbsp;·&nbsp;
+                Remaining: <strong id="pay_remaining">-</strong>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Payment Amount *</label>
+                <input type="number" class="form-control" id="paymentAmount" min="0" placeholder="Enter amount">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closePaymentModal()">Cancel</button>
+            <button class="btn btn-green" onclick="submitPayment()"><i class="fas fa-check"></i> Add Payment</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let allOrders = [];
+    let currentPaymentId = null;
+
+    // ===== INIT =====
+    document.addEventListener('DOMContentLoaded', () => {
+        loadStatistics();
+        loadOrders();
+        document.getElementById('statusFilter').addEventListener('change', applyFilters);
+        document.getElementById('paymentFilter').addEventListener('change', applyFilters);
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+    });
+
+    // ===== STATS =====
+    async function loadStatistics() {
+        try {
+            const s = await fetch('/api/sales-orders/statistics').then(r => r.json());
+            document.getElementById('stat_total').textContent     = s.totalOrders || 0;
+            document.getElementById('stat_pending').textContent   = s.pendingOrders || 0;
+            document.getElementById('stat_delivered').textContent = s.deliveredOrders || 0;
+            document.getElementById('stat_payments').textContent  = '₹' + (s.pendingPayments || 0).toLocaleString('en-IN');
+        } catch(e) { console.error(e); }
+    }
+
+    // ===== ORDERS =====
+    async function loadOrders() {
+        try {
+            allOrders = await fetch('/api/sales-orders').then(r => r.json());
+            displayOrders(allOrders);
+        } catch(e) {
+            document.getElementById('ordersTableBody').innerHTML =
+                '<tr><td colspan="9" style="text-align:center;color:var(--danger);padding:3rem;">Failed to load orders</td></tr>';
+        }
+    }
+
+    function displayOrders(orders) {
+        const tbody = document.getElementById('ordersTableBody');
+        if (!orders.length) {
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--text-muted);padding:3rem;">No orders found</td></tr>';
+            return;
+        }
+        tbody.innerHTML = orders.map(order => {
+            const isOverdue = order.expectedDeliveryDate &&
+                              new Date(order.expectedDeliveryDate) < new Date() &&
+                              order.status !== 'DELIVERED' && order.status !== 'CANCELLED';
+
+            const statusClass = 'status-' + (order.status || '').toLowerCase();
+            const payClass    = 'payment-' + (order.paymentStatus || '').toLowerCase();
+            const totalAmt    = order.totalAmount != null ? order.totalAmount : 0;
+            const paidAmt     = order.paidAmount  != null ? order.paidAmount  : 0;
+            const itemCount   = order.items ? order.items.length : 0;
+
+            return `
+                <tr class="${isOverdue ? 'overdue' : ''}">
+                    <td><strong>${order.orderNumber}</strong></td>
+                    <td>${formatDate(order.orderDate)}</td>
+                    <td>
+                        <strong>${order.customer ? order.customer.customerName : 'N/A'}</strong>
+                        ${order.customer && order.customer.phone
+                            ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;"><i class="fas fa-phone" style="font-size:0.65rem;"></i> ${order.customer.phone}</div>`
+                            : ''}
+                    </td>
+                    <td>
+                        ${order.quotation
+                            ? `<a href="/quotations-list" style="color:var(--info);font-size:0.85rem;text-decoration:none;" title="View Quotation">
+                                <i class="fas fa-file-alt"></i> ${order.quotation.quotationNumber}
+                               </a>`
+                            : '<span style="color:var(--text-muted);font-size:0.8rem;">—</span>'}
+                    </td>
+                    <td>${itemCount} item${itemCount !== 1 ? 's' : ''}</td>
+                    <td><strong>₹${totalAmt.toLocaleString('en-IN')}</strong></td>
+                    <td>
+                        <span class="payment-badge ${payClass}">${order.paymentStatus || '–'}</span>
+                        ${order.paymentStatus !== 'PAID'
+                            ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">Paid: ₹${paidAmt.toLocaleString('en-IN')}</div>`
+                            : ''}
+                    </td>
+                    <td>
+                        <span class="status-badge ${statusClass}">${getStatusIcon(order.status)} ${(order.status || '').replace('_', ' ')}</span>
+                    </td>
+                    <td>
+                        ${order.expectedDeliveryDate
+                            ? `<span style="font-size:0.85rem;">${formatDate(order.expectedDeliveryDate)}</span>`
+                            : '<span style="color:var(--text-muted);font-size:0.8rem;">Not set</span>'}
+                        ${isOverdue ? '<div><span class="overdue-badge">Overdue</span></div>' : ''}
+                    </td>
+                    <td>${getActionButtons(order, totalAmt, paidAmt)}</td>
+                </tr>`;
+        }).join('');
+    }
+
+    function getStatusIcon(status) {
+        return { PENDING:'⏳', IN_PRODUCTION:'🔨', READY:'✅', DELIVERED:'🚚', CANCELLED:'❌' }[status] || '';
+    }
+
+    function getActionButtons(order, totalAmt, paidAmt) {
+        let b = '';
+        if (order.status === 'PENDING')
+            b += `<button class="action-btn btn-start"   onclick="startProduction(${order.id})">🔨 Start</button>`;
+        if (order.status === 'IN_PRODUCTION')
+            b += `<button class="action-btn btn-ready"   onclick="markReady(${order.id})">✅ Ready</button>`;
+        if (order.status === 'READY')
+            b += `<button class="action-btn btn-deliver" onclick="markDelivered(${order.id})">🚚 Deliver</button>`;
+        if (order.paymentStatus !== 'PAID' && order.status !== 'CANCELLED') {
+            const remaining = totalAmt - paidAmt;
+            b += `<button class="action-btn btn-pay"     onclick="openPaymentModal(${order.id}, ${remaining}, '${order.orderNumber}')">💰 Pay</button>`;
+        }
+        if (order.status !== 'DELIVERED' && order.status !== 'CANCELLED')
+            b += `<button class="action-btn btn-cancel"  onclick="cancelOrder(${order.id})"><i class="fas fa-times"></i></button>`;
+        return b;
+    }
+
+    // ===== ACTIONS =====
+    async function startProduction(id) {
+        if (!confirm('Start production for this order?')) return;
+        try {
+            await fetch(`/api/sales-orders/${id}/start-production`, { method: 'POST' });
+            loadOrders(); loadStatistics();
+            showToast('🔨 Production started!', 'success');
+        } catch(e) { showToast('✗ Failed to update order', 'error'); }
+    }
+
+    async function markReady(id) {
+        if (!confirm('Mark as ready for delivery?')) return;
+        try {
+            await fetch(`/api/sales-orders/${id}/mark-ready`, { method: 'POST' });
+            loadOrders(); loadStatistics();
+            showToast('✅ Order marked as ready!', 'success');
+        } catch(e) { showToast('✗ Failed to update order', 'error'); }
+    }
+
+    async function markDelivered(id) {
+        if (!confirm('Mark as delivered?')) return;
+        try {
+            await fetch(`/api/sales-orders/${id}/mark-delivered`, { method: 'POST' });
+            loadOrders(); loadStatistics();
+            showToast('🚚 Order delivered!', 'success');
+        } catch(e) { showToast('✗ Failed to update order', 'error'); }
+    }
+
+    async function cancelOrder(id) {
+        const reason = prompt('Cancellation reason:');
+        if (!reason) return;
+        try {
+            await fetch(`/api/sales-orders/${id}/cancel?reason=${encodeURIComponent(reason)}`, { method: 'POST' });
+            loadOrders(); loadStatistics();
+            showToast('Order cancelled', 'error');
+        } catch(e) { showToast('✗ Failed to cancel', 'error'); }
+    }
+
+    // ===== PAYMENT MODAL =====
+    function openPaymentModal(id, remaining, orderNumber) {
+        currentPaymentId = id;
+        document.getElementById('pay_orderNumber').textContent = orderNumber;
+        document.getElementById('pay_remaining').textContent   = '₹' + remaining.toLocaleString('en-IN');
+        document.getElementById('paymentAmount').value         = remaining;
+        document.getElementById('paymentAmount').max           = remaining;
+        document.getElementById('paymentModal').classList.add('active');
+    }
+
+    function closePaymentModal() {
+        document.getElementById('paymentModal').classList.remove('active');
+        currentPaymentId = null;
+    }
+
+    async function submitPayment() {
+        const amount = parseFloat(document.getElementById('paymentAmount').value);
+        if (!amount || amount <= 0) { showToast('Enter a valid amount', 'error'); return; }
+        try {
+            await fetch(`/api/sales-orders/${currentPaymentId}/add-payment?amount=${amount}`, { method: 'POST' });
+            closePaymentModal();
+            loadOrders(); loadStatistics();
+            showToast('💰 Payment added!', 'success');
+        } catch(e) { showToast('✗ Failed to add payment', 'error'); }
+    }
+
+    // ===== FILTERS =====
+    function applyFilters() {
+        const status  = document.getElementById('statusFilter').value;
+        const payment = document.getElementById('paymentFilter').value;
+        const search  = document.getElementById('searchInput').value.toLowerCase();
+        displayOrders(allOrders.filter(o =>
+            (!status  || o.status === status) &&
+            (!payment || o.paymentStatus === payment) &&
+            (!search  || o.orderNumber.toLowerCase().includes(search) ||
+                         (o.customer && o.customer.customerName && o.customer.customerName.toLowerCase().includes(search)) ||
+                         (o.quotation && o.quotation.quotationNumber && o.quotation.quotationNumber.toLowerCase().includes(search)))
+        ));
+    }
+
+    function resetFilters() {
+        document.getElementById('statusFilter').value  = '';
+        document.getElementById('paymentFilter').value = '';
+        document.getElementById('searchInput').value   = '';
+        displayOrders(allOrders);
+    }
+
+    // ===== UTILS =====
+    function formatDate(d) {
+        if (!d) return 'N/A';
+        return new Date(d).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+    }
+
+    function showToast(msg, type) {
+        const t = document.createElement('div');
+        t.className = 'toast';
+        t.textContent = msg;
+        t.style.background = type === 'success' ? '#38ef7d' : '#ff6b35';
+        t.style.color = type === 'success' ? '#0a0a0a' : 'white';
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 3000);
+    }
+</script>
+</body>
+</html>

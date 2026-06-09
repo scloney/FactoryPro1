@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plywood Optimizer | Factory Pro Tools</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff6b35;
+            --secondary: #1a1a1a;
+            --accent: #f7931e;
+            --bg: #0a0a0a;
+            --card-bg: #1a1a1a;
+            --text: #e0e0e0;
+            --text-muted: #888;
+            --border: #333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        } 
+
+        body {
+            font-family: 'Work Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 107, 53, 0.03) 2px, rgba(255, 107, 53, 0.03) 4px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255, 107, 53, 0.03) 2px, rgba(255, 107, 53, 0.03) 4px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        header {
+            padding: 2rem 0;
+            border-bottom: 2px solid var(--border);
+            background: rgba(26, 26, 26, 0.8);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .back-btn {
+            display: inline-block;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            color: var(--primary);
+        }
+
+        header h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 107, 53, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .card:hover::before {
+            left: 100%;
+        }
+
+        .card:hover {
+            border-color: var(--primary);
+        }
+
+        .card h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8rem;
+            letter-spacing: 2px;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 0;
+            color: var(--text);
+            font-size: 1rem;
+            font-family: 'Work Sans', sans-serif;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 107, 53, 0.05);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input {
+            width: auto;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+        }
+
+        table th,
+        table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        table th {
+            background: rgba(255, 107, 53, 0.1);
+            font-weight: 600;
+            color: var(--primary);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        table td {
+            color: var(--text);
+        }
+
+        table tbody tr {
+            transition: all 0.3s;
+        }
+
+        table tbody tr:hover {
+            background: rgba(255, 107, 53, 0.05);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 2rem;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            font-family: 'Work Sans', sans-serif;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(255, 107, 53, 0.4);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
+        }
+
+        .button-container {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .results {
+            display: none;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: rotate(45deg);
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            font-family: 'Bebas Neue', sans-serif;
+            letter-spacing: 2px;
+            position: relative;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+        }
+
+        .sheet-visualization {
+            border: 2px solid var(--primary);
+            background: var(--card-bg);
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .rectangle {
+            position: absolute;
+            border: 1px solid var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            overflow: hidden;
+            color: #000;
+            font-weight: 600;
+        }
+
+        .sheet-title {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            padding: 1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+        }
+
+        .sheet-container {
+            margin-bottom: 3rem;
+        }
+
+        .error-message {
+            background: rgba(220, 53, 69, 0.1);
+            border: 1px solid #dc3545;
+            color: #dc3545;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 2rem;
+            }
+
+            table {
+                font-size: 0.85rem;
+            }
+
+            table th,
+            table td {
+                padding: 0.5rem;
+            }
+
+            .button-container {
+                flex-direction: column;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Unified Navigation Styles */
+        .nav-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .nav-btn {
+            display: inline-block;
+            padding: 0.6rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text, #e0e0e0) !important;
+            text-decoration: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            border-radius: 4px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, var(--primary, #ff6b35), var(--accent, #f7931e));
+            color: white !important;
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(135deg, var(--primary, #ff6b35), var(--accent, #f7931e));
+            color: white !important;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.2);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+            <div>
+                <h1>Plywood Optimizer</h1>
+                <p>MaxRect Algorithm for Optimal Cutting</p>
+            </div>
+            <div class="nav-buttons">
+                <a href="/" class="nav-btn" title="Home">Home</a>
+                <a href="/optimizer" class="nav-btn active" title="Plywood Optimizer">Optimizer</a>
+                <a href="/quotations-list" class="nav-btn" title="Quotations List">Quotations</a>
+                <a href="/sales-orders" class="nav-btn" title="Sales Orders">Sales Orders</a>
+                <a href="/bills" class="nav-btn" title="Bills List">Bills</a>
+                <a href="/inventory" class="nav-btn" title="Inventory Management">Inventory</a>
+                <a href="/suppliers" class="nav-btn" title="Supplier Management">Suppliers</a>
+                <a href="/purchase-orders" class="nav-btn" title="Purchase Orders">Purchase Orders</a>
+                <a href="/customers" class="nav-btn" title="Customer Management">Customers</a>
+                <a href="/barcode/print" class="nav-btn" title="Print Barcodes">Barcode Print</a>
+                <a href="/barcode/scan" class="nav-btn" title="Scan &amp; Update Stock">Barcode Scan</a>
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="card">
+            <h2>Sheet Dimensions</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Sheet Width (mm)</label>
+                    <input type="number" id="sheetWidth" value="2440" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label>Sheet Height (mm)</label>
+                    <input type="number" id="sheetHeight" value="1220" step="0.1">
+                </div>
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="allowRotation" checked>
+                    <label for="allowRotation">Allow Rotation</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Rectangles to Cut</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Width (mm)</label>
+                    <input type="number" id="rectWidth" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label>Height (mm)</label>
+                    <input type="number" id="rectHeight" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label>Quantity</label>
+                    <input type="number" id="rectQuantity" value="1" min="1">
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-success" onclick="addRectangle()">+ Add Rectangle</button>
+                </div>
+            </div>
+            
+            <table id="rectanglesTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Width (mm)</th>
+                        <th>Height (mm)</th>
+                        <th>Quantity</th>
+                        <th>Total Area (sq mm)</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="rectanglesBody"></tbody>
+            </table>
+            
+            <div class="button-container">
+                <button class="btn btn-primary" onclick="optimize()">🚀 Optimize</button>
+                <button class="btn btn-secondary" onclick="clearAll()">Clear All</button>
+            </div>
+        </div>
+        
+        <div class="card results" id="results">
+            <h2>Optimization Results</h2>
+            <div class="stats-grid" id="statsGrid"></div>
+            <button class="btn btn-primary" onclick="downloadPdf()">📥 Download PDF Report</button>
+            <div id="sheetsVisualization"></div>
+        </div>
+    </div>
+    
+    <script>
+        let rectangles = [];
+        let optimizationResult = null;
+        const colors = ['#64B5F6', '#90EE90', '#FFB6C1', '#FFD700', '#D8BFD8', '#FFA07A', '#87CEEB', '#F08080'];
+        
+        function addRectangle() {
+            const width = parseFloat(document.getElementById('rectWidth').value);
+            const height = parseFloat(document.getElementById('rectHeight').value);
+            const quantity = parseInt(document.getElementById('rectQuantity').value);
+            
+            if (!width || !height || !quantity || width <= 0 || height <= 0 || quantity <= 0) {
+                alert('Please fill in all rectangle fields with valid positive numbers');
+                return;
+            }
+            
+            rectangles.push({ width, height, quantity });
+            updateRectanglesTable();
+            
+            document.getElementById('rectWidth').value = '';
+            document.getElementById('rectHeight').value = '';
+            document.getElementById('rectQuantity').value = '1';
+        }
+        
+        function updateRectanglesTable() {
+            const tbody = document.getElementById('rectanglesBody');
+            tbody.innerHTML = '';
+            
+            rectangles.forEach((rect, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${rect.width.toFixed(1)}</td>
+                    <td>${rect.height.toFixed(1)}</td>
+                    <td>${rect.quantity}</td>
+                    <td>${(rect.width * rect.height * rect.quantity).toFixed(2)}</td>
+                    <td><button class="btn btn-danger" onclick="removeRectangle(${index})">Remove</button></td>
+                `;
+            });
+        }
+        
+        function removeRectangle(index) {
+            rectangles.splice(index, 1);
+            updateRectanglesTable();
+        }
+        
+        function clearAll() {
+            rectangles = [];
+            updateRectanglesTable();
+            document.getElementById('results').style.display = 'none';
+        }
+        
+        async function optimize() {
+            if (rectangles.length === 0) {
+                alert('Please add at least one rectangle');
+                return;
+            }
+            
+            const sheetWidth = parseFloat(document.getElementById('sheetWidth').value);
+            const sheetHeight = parseFloat(document.getElementById('sheetHeight').value);
+            
+            if (!sheetWidth || !sheetHeight || sheetWidth <= 0 || sheetHeight <= 0) {
+                alert('Please enter valid sheet dimensions');
+                return;
+            }
+            
+            const request = {
+                sheetWidth: sheetWidth,
+                sheetHeight: sheetHeight,
+                rectangles: rectangles,
+                allowRotation: document.getElementById('allowRotation').checked
+            };
+            
+            try {
+                console.log('Sending optimization request:', request);
+                
+                const response = await fetch('/optimizer/optimize', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(request)
+                });
+                
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Server error:', errorText);
+                    throw new Error(`Server error (${response.status}): ${errorText}`);
+                }
+                
+                optimizationResult = await response.json();
+                console.log('Optimization result:', optimizationResult);
+                
+                displayResults(optimizationResult, request.sheetWidth, request.sheetHeight);
+                
+            } catch (error) {
+                console.error('Optimization error:', error);
+                alert('Optimization failed: ' + error.message + '\n\nCheck browser console for details.');
+            }
+        }
+        
+        function displayResults(result, sheetWidth, sheetHeight) {
+            // Comprehensive null safety checks
+            const totalSheets = result?.totalSheets || 0;
+            const avgUtilization = result?.averageUtilization || 0;
+            const usedArea = result?.usedArea || 0;
+            const wasteArea = result?.wasteArea || 0;
+            const sheets = result?.sheets || [];
+            
+            console.log('Displaying results:', { totalSheets, avgUtilization, usedArea, wasteArea, sheetsCount: sheets.length });
+            
+            // Update statistics
+            const statsGrid = document.getElementById('statsGrid');
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${totalSheets}</div>
+                    <div class="stat-label">Total Sheets</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${avgUtilization.toFixed(1)}%</div>
+                    <div class="stat-label">Avg Utilization</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${(usedArea / 1000000).toFixed(2)}</div>
+                    <div class="stat-label">Used Area (sq m)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${(wasteArea / 1000000).toFixed(2)}</div>
+                    <div class="stat-label">Waste Area (sq m)</div>
+                </div>
+            `;
+            
+            // Render visualization
+            const visualization = document.getElementById('sheetsVisualization');
+            visualization.innerHTML = '';
+            
+            if (sheets.length === 0) {
+                visualization.innerHTML = '<p class="loading">No sheets to display</p>';
+                document.getElementById('results').style.display = 'block';
+                return;
+            }
+            
+            sheets.forEach((sheet, sheetIndex) => {
+                try {
+                    const sheetDiv = document.createElement('div');
+                    sheetDiv.className = 'sheet-container';
+                    
+                    // Null-safe sheet values
+                    const sheetNumber = sheet?.sheetNumber || (sheetIndex + 1);
+                    const placedRectangles = sheet?.placedRectangles || [];
+                    const utilization = sheet?.utilization || 0;
+                    const sheetW = sheet?.width || sheetWidth;
+                    const sheetH = sheet?.height || sheetHeight;
+                    
+                    console.log(`Processing sheet ${sheetNumber}:`, { sheetW, sheetH, rectangles: placedRectangles.length });
+                    
+                    const title = document.createElement('div');
+                    title.className = 'sheet-title';
+                    title.textContent = `Sheet ${sheetNumber} - ${placedRectangles.length} pieces - ${utilization.toFixed(1)}% utilized`;
+                    sheetDiv.appendChild(title);
+                    
+                    // Calculate scale
+                    const maxDimension = Math.max(sheetW, sheetH);
+                    const scale = maxDimension > 0 ? 500 / maxDimension : 1;
+                    const visualWidth = sheetW * scale;
+                    const visualHeight = sheetH * scale;
+                    
+                    const canvas = document.createElement('div');
+                    canvas.className = 'sheet-visualization';
+                    canvas.style.width = visualWidth + 'px';
+                    canvas.style.height = visualHeight + 'px';
+                    
+                    // Place rectangles
+                    placedRectangles.forEach((rect, index) => {
+                        try {
+                            const rectDiv = document.createElement('div');
+                            rectDiv.className = 'rectangle';
+                            
+                            // Null-safe rectangle values
+                            const rectX = rect?.x || 0;
+                            const rectY = rect?.y || 0;
+                            const rectW = rect?.width || 0;
+                            const rectH = rect?.height || 0;
+                            const isRotated = rect?.rotated || false;
+                            
+                            // Calculate actual dimensions (accounting for rotation)
+                            const actualWidth = isRotated ? rectH : rectW;
+                            const actualHeight = isRotated ? rectW : rectH;
+                            
+                            // Position and size
+                            rectDiv.style.left = (rectX * scale) + 'px';
+                            rectDiv.style.top = (rectY * scale) + 'px';
+                            rectDiv.style.width = (actualWidth * scale) + 'px';
+                            rectDiv.style.height = (actualHeight * scale) + 'px';
+                            rectDiv.style.backgroundColor = colors[index % colors.length];
+                            
+                            // Label
+                            const label = `${rectW.toFixed(0)}×${rectH.toFixed(0)}${isRotated ? ' (R)' : ''}`;
+                            rectDiv.textContent = label;
+                            
+                            canvas.appendChild(rectDiv);
+                        } catch (rectError) {
+                            console.error('Error rendering rectangle:', rectError, rect);
+                        }
+                    });
+                    
+                    sheetDiv.appendChild(canvas);
+                    visualization.appendChild(sheetDiv);
+                    
+                } catch (sheetError) {
+                    console.error('Error rendering sheet:', sheetError, sheet);
+                }
+            });
+            
+            // Show results
+            document.getElementById('results').style.display = 'block';
+            
+            // Scroll to results
+            setTimeout(() => {
+                document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+        
+        async function downloadPdf() {
+            if (!optimizationResult) {
+                alert('No optimization results available');
+                return;
+            }
+            
+            const request = {
+                result: optimizationResult,
+                sheetWidth: parseFloat(document.getElementById('sheetWidth').value),
+                sheetHeight: parseFloat(document.getElementById('sheetHeight').value)
+            };
+            
+            try {
+                console.log('Requesting PDF generation');
+                
+                const response = await fetch('/optimizer/download-pdf', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(request)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+                
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'plywood-optimization-' + Date.now() + '.pdf';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+                console.log('PDF downloaded successfully');
+                
+            } catch (error) {
+                console.error('PDF generation error:', error);
+                alert('PDF generation failed: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

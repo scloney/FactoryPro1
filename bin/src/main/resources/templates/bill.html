@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bill Maker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            margin-bottom: 5px;
+        }
+        
+        .back-btn {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            text-decoration: none;
+            margin-bottom: 10px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        table th, table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .totals {
+            text-align: right;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        
+        .totals div {
+            margin: 10px 0;
+            font-size: 1.1em;
+        }
+        
+        .totals .grand-total {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+            padding-top: 10px;
+            border-top: 2px solid #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/" class="back-btn">← Back to Home</a>
+        <h1>🧾 Bill Maker</h1>
+        <p>Generate Professional Invoices</p>
+    </div>
+    
+    <div class="container">
+        <div class="card">
+            <h2>Company Details</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Company Name</label>
+                    <input type="text" id="companyName" placeholder="Your Company Name">
+                </div>
+                <div class="form-group">
+                    <label>Company Phone</label>
+                    <input type="text" id="companyPhone" placeholder="+91-1234567890">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Company Address</label>
+                    <input type="text" id="companyAddress" placeholder="Company Address">
+                </div>
+                <div class="form-group">
+                    <label>Company Email</label>
+                    <input type="email" id="companyEmail" placeholder="info@company.com">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Company GSTIN</label>
+                    <input type="text" id="companyGSTIN" placeholder="22AAAAA0000A1Z5">
+                </div>
+                <div class="form-group">
+                    <label>Bank Details</label>
+                    <input type="text" id="bankDetails" placeholder="Bank Name, Account No, IFSC">
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Invoice Details</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Invoice Number</label>
+                    <input type="text" id="billNumber" placeholder="INV-2024-001">
+                </div>
+                <div class="form-group">
+                    <label>Invoice Date</label>
+                    <input type="date" id="date">
+                </div>
+                <div class="form-group">
+                    <label>Due Date</label>
+                    <input type="date" id="dueDate">
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Customer Details</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Customer Name</label>
+                    <input type="text" id="customerName" placeholder="Customer Name">
+                </div>
+                <div class="form-group">
+                    <label>Customer Phone</label>
+                    <input type="text" id="customerPhone" placeholder="+91-9876543210">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Customer Address</label>
+                    <input type="text" id="customerAddress" placeholder="Customer Address">
+                </div>
+                <div class="form-group">
+                    <label>Customer Email</label>
+                    <input type="email" id="customerEmail" placeholder="customer@email.com">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Customer GSTIN</label>
+                    <input type="text" id="customerGSTIN" placeholder="22AAAAA0000A1Z5">
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Items</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" id="itemDescription" placeholder="Item description">
+                </div>
+                <div class="form-group">
+                    <label>Quantity</label>
+                    <input type="number" id="itemQuantity" value="1" min="1">
+                </div>
+                <div class="form-group">
+                    <label>Unit</label>
+                    <input type="text" id="itemUnit" placeholder="pcs, sqft, sheets" value="pcs">
+                </div>
+                <div class="form-group">
+                    <label>Unit Price (₹)</label>
+                    <input type="number" id="itemPrice" step="0.01">
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-success" onclick="addItem()">+ Add Item</button>
+                </div>
+            </div>
+            
+            <table id="itemsTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Description</th>
+                        <th>Quantity</th>
+                        <th>Unit</th>
+                        <th>Unit Price (₹)</th>
+                        <th>Total (₹)</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="itemsBody"></tbody>
+            </table>
+            
+            <div class="totals" id="totals"></div>
+        </div>
+        
+        <div class="card">
+            <h2>Additional Details</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>GST Rate (%)</label>
+                    <input type="number" id="taxRate" value="18" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Discount (%)</label>
+                    <input type="number" id="discount" value="0" step="0.01">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Payment Terms</label>
+                    <input type="text" id="paymentTerms" placeholder="Net 30 days">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea id="notes" placeholder="Thank you for your business!"></textarea>
+            </div>
+        </div>
+        
+        <div style="text-align: center;">
+            <button class="btn btn-primary" onclick="generatePdf()">📥 Generate Invoice PDF</button>
+        </div>
+    </div>
+    
+    <script>
+        let items = [];
+        
+        // Set dates
+        const today = new Date();
+        document.getElementById('date').valueAsDate = today;
+        const dueDate = new Date(today);
+        dueDate.setDate(dueDate.getDate() + 30);
+        document.getElementById('dueDate').valueAsDate = dueDate;
+        
+        function addItem() {
+            const description = document.getElementById('itemDescription').value;
+            const quantity = parseInt(document.getElementById('itemQuantity').value);
+            const unit = document.getElementById('itemUnit').value;
+            const unitPrice = parseFloat(document.getElementById('itemPrice').value);
+            
+            if (!description || !quantity || !unit || !unitPrice) {
+                alert('Please fill in all item fields');
+                return;
+            }
+            
+            items.push({ description, quantity, unit, unitPrice });
+            updateItemsTable();
+            
+            // Clear inputs
+            document.getElementById('itemDescription').value = '';
+            document.getElementById('itemQuantity').value = '1';
+            document.getElementById('itemUnit').value = 'pcs';
+            document.getElementById('itemPrice').value = '';
+        }
+        
+        function updateItemsTable() {
+            const tbody = document.getElementById('itemsBody');
+            tbody.innerHTML = '';
+            
+            items.forEach((item, index) => {
+                const row = tbody.insertRow();
+                const total = item.quantity * item.unitPrice;
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.description}</td>
+                    <td>${item.quantity}</td>
+                    <td>${item.unit}</td>
+                    <td>₹ ${item.unitPrice.toFixed(2)}</td>
+                    <td>₹ ${total.toFixed(2)}</td>
+                    <td><button class="btn btn-danger" onclick="removeItem(${index})">Remove</button></td>
+                `;
+            });
+            
+            updateTotals();
+        }
+        
+        function removeItem(index) {
+            items.splice(index, 1);
+            updateItemsTable();
+        }
+        
+        function updateTotals() {
+            const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+            const taxRate = parseFloat(document.getElementById('taxRate').value) || 0;
+            const discount = parseFloat(document.getElementById('discount').value) || 0;
+            
+            const taxAmount = subtotal * (taxRate / 100);
+            const discountAmount = subtotal * (discount / 100);
+            const grandTotal = subtotal + taxAmount - discountAmount;
+            
+            document.getElementById('totals').innerHTML = `
+                <div>Subtotal: ₹ ${subtotal.toFixed(2)}</div>
+                ${discount > 0 ? `<div>Discount (${discount}%): - ₹ ${discountAmount.toFixed(2)}</div>` : ''}
+                ${taxRate > 0 ? `<div>GST (${taxRate}%): ₹ ${taxAmount.toFixed(2)}</div>` : ''}
+                <div class="grand-total">Grand Total: ₹ ${grandTotal.toFixed(2)}</div>
+            `;
+        }
+        
+        // Update totals when tax or discount changes
+        document.getElementById('taxRate').addEventListener('input', updateTotals);
+        document.getElementById('discount').addEventListener('input', updateTotals);
+        
+        async function generatePdf() {
+            if (items.length === 0) {
+                alert('Please add at least one item');
+                return;
+            }
+            
+            const bill = {
+                billNumber: document.getElementById('billNumber').value,
+                date: document.getElementById('date').value,
+                dueDate: document.getElementById('dueDate').value,
+                customerName: document.getElementById('customerName').value,
+                customerAddress: document.getElementById('customerAddress').value,
+                customerPhone: document.getElementById('customerPhone').value,
+                customerEmail: document.getElementById('customerEmail').value,
+                customerGSTIN: document.getElementById('customerGSTIN').value,
+                items: items,
+                taxRate: parseFloat(document.getElementById('taxRate').value) || 0,
+                discount: parseFloat(document.getElementById('discount').value) || 0,
+                paymentTerms: document.getElementById('paymentTerms').value,
+                notes: document.getElementById('notes').value,
+                companyName: document.getElementById('companyName').value,
+                companyAddress: document.getElementById('companyAddress').value,
+                companyPhone: document.getElementById('companyPhone').value,
+                companyEmail: document.getElementById('companyEmail').value,
+                companyGSTIN: document.getElementById('companyGSTIN').value,
+                bankDetails: document.getElementById('bankDetails').value
+            };
+            
+            try {
+                const response = await fetch('/bill/generate-pdf', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(bill)
+                });
+                
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `invoice-${bill.billNumber}.pdf`;
+                a.click();
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                alert('PDF generation failed: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

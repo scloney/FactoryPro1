@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Print Product Barcodes | Factory Pro Tools</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff6b35;
+            --secondary: #1a1a1a;
+            --accent: #f7931e;
+            --bg: #0a0a0a;
+            --card-bg: #1a1a1a;
+            --text: #e0e0e0;
+            --text-muted: #888;
+            --border: #333;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Work Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 107, 53, 0.03) 2px, rgba(255, 107, 53, 0.03) 4px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255, 107, 53, 0.03) 2px, rgba(255, 107, 53, 0.03) 4px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        header {
+            padding: 2rem 0;
+            border-bottom: 2px solid var(--border);
+            background: rgba(26, 26, 26, 0.8);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        header h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 107, 53, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .card:hover::before {
+            left: 100%;
+        }
+
+        .card:hover {
+            border-color: var(--primary);
+        }
+
+        .card h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8rem;
+            letter-spacing: 2px;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+
+        .controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex-grow: 1;
+            max-width: 400px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 107, 53, 0.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+        }
+
+        table th,
+        table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        table th {
+            background: rgba(255, 107, 53, 0.1);
+            font-weight: 600;
+            color: var(--primary);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        table td {
+            color: var(--text);
+            vertical-align: middle;
+        }
+
+        table tbody tr {
+            transition: all 0.3s;
+        }
+
+        table tbody tr:hover {
+            background: rgba(255, 107, 53, 0.05);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.6rem 1.2rem;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            font-size: 0.8rem;
+            font-family: 'Work Sans', sans-serif;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(255, 107, 53, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: #000;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .barcode-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.25rem;
+        }
+
+        .barcode-img {
+            background: white;
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        .barcode-val {
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .alert-success {
+            background: rgba(40, 167, 69, 0.2);
+            border: 1px solid var(--success);
+            color: #2ced5e;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+
+        /* PRINT CSS styles */
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            body::before {
+                display: none;
+            }
+            header,
+            .controls-row,
+            .btn,
+            th:last-child,
+            td:last-child {
+                display: none !important;
+            }
+            .container {
+                width: 100%;
+                max-width: 100%;
+                padding: 0;
+            }
+            .card {
+                border: none;
+                padding: 0;
+                background: white;
+            }
+            .card h2 {
+                color: black;
+                font-size: 1.5rem;
+                margin-bottom: 1rem;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            table th {
+                background: #eee !important;
+                color: black !important;
+                border-bottom: 2px solid #333;
+            }
+            table td {
+                color: black;
+                border-bottom: 1px solid #ddd;
+            }
+            .barcode-img {
+                border: 1px solid #ccc;
+            }
+            .barcode-val {
+                color: black;
+            }
+        }
+
+        /* Unified Navigation Styles */
+        .nav-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .nav-btn {
+            display: inline-block;
+            padding: 0.6rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text, #e0e0e0) !important;
+            text-decoration: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            border-radius: 4px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, var(--primary, #ff6b35), var(--accent, #f7931e));
+            color: white !important;
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(135deg, var(--primary, #ff6b35), var(--accent, #f7931e));
+            color: white !important;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.2);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div>
+                <h1>Print Product Barcodes</h1>
+                <p>Generate, view, and print barcodes or QR codes for inventory management</p>
+            </div>
+            <div class="nav-buttons">
+                <a href="/" class="nav-btn" title="Home">Home</a>
+                <a href="/optimizer" class="nav-btn" title="Plywood Optimizer">Optimizer</a>
+                <a href="/quotations-list" class="nav-btn" title="Quotations List">Quotations</a>
+                <a href="/sales-orders" class="nav-btn" title="Sales Orders">Sales Orders</a>
+                <a href="/bills" class="nav-btn" title="Bills List">Bills</a>
+                <a href="/inventory" class="nav-btn" title="Inventory Management">Inventory</a>
+                <a href="/suppliers" class="nav-btn" title="Supplier Management">Suppliers</a>
+                <a href="/purchase-orders" class="nav-btn" title="Purchase Orders">Purchase Orders</a>
+                <a href="/customers" class="nav-btn" title="Customer Management">Customers</a>
+                <a href="/barcode/print" class="nav-btn active" title="Print Barcodes">Barcode Print</a>
+                <a href="/barcode/scan" class="nav-btn" title="Scan &amp; Update Stock">Barcode Scan</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div id="alertSuccess" class="alert-success"></div>
+
+        <div class="card">
+            <h2>Product Catalog & Barcodes</h2>
+
+            <div class="controls-row">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search products by name or code..." onkeyup="filterProducts()">
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button class="btn btn-success" onclick="generateAllBarcodes()">
+                        <i class="fas fa-barcode"></i> Generate All Barcodes
+                    </button>
+                    <button class="btn btn-primary" onclick="window.print()">
+                        <i class="fas fa-print"></i> Print Page
+                    </button>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Product Name</th>
+                        <th>Unit</th>
+                        <th>Stock Level</th>
+                        <th>Barcode Visual</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="productsTableBody">
+                    <tr th:each="product : ${products}" th:id="'product-row-' + ${product.id}">
+                        <td th:text="${product.productCode}">PROD-001</td>
+                        <td class="product-name" th:text="${product.name}">Premium Teak Plywood</td>
+                        <td th:text="${product.unit}">Sheets</td>
+                        <td>
+                            <span th:text="${product.currentStock}">45</span>
+                        </td>
+                        <td>
+                            <div th:id="'barcode-container-' + ${product.id}" class="barcode-container" th:style="${product.barcodeValue == null || product.barcodeValue.isEmpty() ? 'display: none;' : ''}">
+                                <img th:id="'barcode-img-' + ${product.id}" th:src="${product.barcodeValue != null ? '/api/barcode/image/' + product.id : ''}" width="150" height="50" class="barcode-img" alt="Barcode">
+                                <span th:id="'barcode-val-' + ${product.id}" class="barcode-val" th:text="${product.barcodeValue}">PLY-1-12345</span>
+                            </div>
+                            <span th:id="'barcode-placeholder-' + ${product.id}" th:style="${product.barcodeValue != null && !product.barcodeValue.isEmpty() ? 'display: none;' : ''}" style="color: var(--text-muted); font-style: italic;">
+                                No barcode generated
+                            </span>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <button class="btn btn-warning btn-sm" th:onclick="'generateProductBarcode(' + ${product.id} + ')'" title="Generate Barcode">
+                                    <i class="fas fa-magic"></i> Generate
+                                </button>
+                                <a th:id="'print-barcode-btn-' + ${product.id}" th:href="${product.barcodeValue != null ? '/api/barcode/image/' + product.id : '#'}" target="_blank" class="btn btn-primary btn-sm" th:style="${product.barcodeValue == null || product.barcodeValue.isEmpty() ? 'display: none;' : ''}" title="Open Barcode in New Tab">
+                                    <i class="fas fa-barcode"></i> Print Barcode
+                                </a>
+                                <a th:id="'print-qr-btn-' + ${product.id}" th:href="${product.barcodeValue != null ? '/api/barcode/qr/' + product.id : '#'}" target="_blank" class="btn btn-secondary btn-sm" th:style="${product.barcodeValue == null || product.barcodeValue.isEmpty() ? 'display: none;' : ''}" title="Open QR Code in New Tab">
+                                    <i class="fas fa-qrcode"></i> Print QR
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        // Live search filter
+        function filterProducts() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#productsTableBody tr');
+            
+            rows.forEach(row => {
+                const name = row.querySelector('.product-name').textContent.toLowerCase();
+                const code = row.cells[0].textContent.toLowerCase();
+                if (name.includes(query) || code.includes(query)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        // Generate barcode for a single product
+        function generateProductBarcode(productId) {
+            const alertBox = document.getElementById('alertSuccess');
+            fetch(`/api/barcode/generate/${productId}`, {
+                method: 'POST'
+            })
+            .then(response => {
+                if (response.ok) {
+                    const barcodeVal = response.headers.get('X-Barcode-Value');
+                    
+                    // Update visual image and value label
+                    const img = document.getElementById(`barcode-img-${productId}`);
+                    const val = document.getElementById(`barcode-val-${productId}`);
+                    const container = document.getElementById(`barcode-container-${productId}`);
+                    const placeholder = document.getElementById(`barcode-placeholder-${productId}`);
+                    
+                    const printBarBtn = document.getElementById(`print-barcode-btn-${productId}`);
+                    const printQrBtn = document.getElementById(`print-qr-btn-${productId}`);
+
+                    // Refresh image with a random cache-buster query param
+                    img.src = `/api/barcode/image/${productId}?t=${new Date().getTime()}`;
+                    val.textContent = barcodeVal;
+                    
+                    container.style.display = 'flex';
+                    placeholder.style.display = 'none';
+                    
+                    printBarBtn.href = `/api/barcode/image/${productId}`;
+                    printBarBtn.style.display = 'inline-block';
+                    
+                    printQrBtn.href = `/api/barcode/qr/${productId}`;
+                    printQrBtn.style.display = 'inline-block';
+
+                    showAlert(`Successfully generated barcode: ${barcodeVal}`);
+                } else {
+                    alert('Error generating barcode. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Connection error while generating barcode.');
+            });
+        }
+
+        // Bulk generate barcodes
+        function generateAllBarcodes() {
+            if (!confirm('Are you sure you want to generate barcodes for all products currently lacking one?')) {
+                return;
+            }
+
+            fetch('/api/barcode/generate-all', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                showAlert(data.message || 'Successfully bulk generated barcodes.');
+                // Reload page after a delay to show all new barcodes
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Connection error during bulk generation.');
+            });
+        }
+
+        function showAlert(msg) {
+            const alertBox = document.getElementById('alertSuccess');
+            alertBox.textContent = msg;
+            alertBox.style.display = 'block';
+            setTimeout(() => {
+                alertBox.style.display = 'none';
+            }, 4000);
+        }
+    </script>
+</body>
+</html>

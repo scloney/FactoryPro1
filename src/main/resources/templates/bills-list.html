@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bills & Invoices | Factory Pro Tools</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff6b35;
+            --accent:  #f7931e;
+            --bg:      #0a0a0a;
+            --card-bg: #1a1a1a;
+            --text:    #e0e0e0;
+            --text-muted: #888;
+            --border:  #333;
+            --success: #38ef7d;
+            --amber:   #f59e0b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Work Sans', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background-image:
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,107,53,0.03) 2px, rgba(255,107,53,0.03) 4px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255,107,53,0.03) 2px, rgba(255,107,53,0.03) 4px);
+            pointer-events: none; z-index: 0;
+        }
+        .container { max-width: 1600px; margin: 0 auto; padding: 0 2rem; position: relative; z-index: 1; }
+
+        header { padding: 1.5rem 0; border-bottom: 2px solid var(--border); background: rgba(26,26,26,0.95); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 100; }
+        .header-content { display: flex; justify-content: space-between; align-items: center; }
+        .page-title { display: flex; align-items: center; gap: 1rem; }
+        .page-icon { width: 50px; height: 50px; background: linear-gradient(135deg, var(--amber), #fbbf24); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; clip-path: polygon(30% 0%,70% 0%,100% 30%,100% 70%,70% 100%,30% 100%,0% 70%,0% 30%); }
+        .page-title h1 { font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; letter-spacing: 2px; background: linear-gradient(90deg, var(--amber), #fbbf24); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .btn { display: inline-block; background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; padding: 0.8rem 2rem; text-decoration: none; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s; border: none; cursor: pointer; font-size: 0.9rem; }
+        .btn:hover { transform: scale(1.05); box-shadow: 0 5px 20px rgba(255,107,53,0.4); }
+        .btn-secondary { background: var(--border); }
+        .btn-secondary:hover { background: var(--text-muted); box-shadow: none; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1.5rem; margin: 2rem 0; }
+        .stat-card { background: var(--card-bg); border: 2px solid var(--border); padding: 1.5rem; transition: all 0.3s; }
+        .stat-card:hover { border-color: var(--amber); transform: translateY(-3px); }
+        .stat-icon { width: 50px; height: 50px; background: linear-gradient(135deg, var(--amber), #fbbf24); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1rem; clip-path: polygon(30% 0%,70% 0%,100% 30%,100% 70%,70% 100%,30% 100%,0% 70%,0% 30%); }
+        .stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 2px; color: var(--amber); }
+        .stat-label { color: var(--text-muted); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+
+        .content-card { background: var(--card-bg); border: 2px solid var(--border); margin-bottom: 2rem; }
+        .content-header { padding: 1.5rem 2rem; border-bottom: 2px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(251,191,36,0.08)); }
+        .content-header h2 { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: 2px; color: var(--amber); }
+        .content-body { padding: 2rem; }
+
+        .filters { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; margin-bottom: 1.5rem; }
+        .form-control, .form-select { background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 0.8rem 1rem; font-family: 'Work Sans', sans-serif; transition: all 0.3s; width: 100%; }
+        .form-control:focus, .form-select:focus { outline: none; border-color: var(--amber); }
+
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: var(--bg); }
+        th { padding: 1rem; text-align: left; font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 1px; color: var(--amber); border-bottom: 2px solid var(--border); }
+        td { padding: 0.9rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        tbody tr { transition: all 0.2s; }
+        tbody tr:hover { background: rgba(245,158,11,0.04); }
+
+        .status-badge { display: inline-block; padding: 0.25rem 0.8rem; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; clip-path: polygon(6% 0%,94% 0%,100% 50%,94% 100%,6% 100%,0% 50%); }
+        .status-draft   { background: #555; color: #fff; }
+        .status-paid    { background: var(--success); color: var(--bg); }
+        .status-overdue { background: #dc3545; color: #fff; }
+
+        .qt-ref { font-size: 0.75rem; color: var(--amber); background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); padding: 0.15rem 0.5rem; display: inline-block; }
+
+        .action-btn { background: var(--border); color: var(--text); border: none; padding: 0.45rem 0.7rem; margin: 0 0.1rem; cursor: pointer; transition: all 0.2s; font-size: 0.8rem; text-decoration: none; display: inline-block; }
+        .action-btn:hover { background: var(--primary); color: white; }
+        .action-btn.btn-paid  { background: rgba(56,239,125,0.1); color: var(--success); border: 1px solid rgba(56,239,125,0.35); }
+        .action-btn.btn-paid:hover { background: var(--success); color: var(--bg); }
+        .action-btn.btn-overdue { background: rgba(220,53,69,0.1); color: #dc3545; border: 1px solid rgba(220,53,69,0.35); }
+        .action-btn.btn-overdue:hover { background: #dc3545; color: white; }
+        .action-btn.btn-new-bill { background: linear-gradient(135deg,var(--amber),#fbbf24); color: var(--bg); font-weight: 700; }
+        .action-btn.btn-new-bill:hover { transform: scale(1.05); box-shadow: 0 4px 15px rgba(245,158,11,0.4); }
+
+        .toast { position: fixed; bottom: 2rem; right: 2rem; z-index: 9999; padding: 1rem 2rem; font-weight: 700; font-size: 0.9rem; letter-spacing: 1px; }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 999; align-items: center; justify-content: center; padding: 1rem; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--card-bg); border: 2px solid var(--amber); width: 100%; max-width: 560px; animation: modalIn 0.3s ease; }
+        @keyframes modalIn { from { transform: translateY(-25px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+        .modal-header { padding: 1.5rem 2rem; border-bottom: 2px solid var(--border); background: linear-gradient(135deg,rgba(245,158,11,0.12),rgba(251,191,36,0.08)); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 2px; color: var(--amber); }
+        .modal-close { background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer; }
+        .modal-close:hover { color: var(--amber); }
+        .modal-body { padding: 2rem; }
+        .modal-footer { padding: 1.2rem 2rem; border-top: 2px solid var(--border); display: flex; gap: 1rem; justify-content: flex-end; }
+        .detail-row { display: flex; justify-content: space-between; padding: 0.6rem 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { color: var(--text-muted); }
+        .detail-value { color: var(--text); font-weight: 600; }
+        .detail-value.green { color: var(--success); }
+        .detail-value.amber { color: var(--amber); }
+
+        @media (max-width: 768px) { .filters { grid-template-columns: 1fr; } }
+
+        /* Unified Navigation Styles */
+        .nav-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .nav-btn {
+            display: inline-block;
+            padding: 0.6rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text, #e0e0e0) !important;
+            text-decoration: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            border-radius: 4px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, var(--primary, #ff6b35), var(--accent, #f7931e));
+            color: white !important;
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(135deg, var(--primary, #ff6b35), var(--accent, #f7931e));
+            color: white !important;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.2);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <div class="header-content">
+            <div class="page-title">
+                <div class="page-icon"><i class="fas fa-file-invoice"></i></div>
+                <h1>Bills & Invoices</h1>
+            </div>
+            <div class="nav-buttons">
+                <a href="/" class="nav-btn" title="Home">Home</a>
+                <a href="/optimizer" class="nav-btn" title="Plywood Optimizer">Optimizer</a>
+                <a href="/quotations-list" class="nav-btn" title="Quotations List">Quotations</a>
+                <a href="/sales-orders" class="nav-btn" title="Sales Orders">Sales Orders</a>
+                <a href="/bills" class="nav-btn active" title="Bills List">Bills</a>
+                <a href="/inventory" class="nav-btn" title="Inventory Management">Inventory</a>
+                <a href="/suppliers" class="nav-btn" title="Supplier Management">Suppliers</a>
+                <a href="/purchase-orders" class="nav-btn" title="Purchase Orders">Purchase Orders</a>
+                <a href="/customers" class="nav-btn" title="Customer Management">Customers</a>
+                <a href="/barcode/print" class="nav-btn" title="Print Barcodes">Barcode Print</a>
+                <a href="/barcode/scan" class="nav-btn" title="Scan &amp; Update Stock">Barcode Scan</a>
+                <a href="/bill" class="btn" id="newBillBtn" style="padding:0.6rem 1rem;font-size:0.75rem;margin-left:0.5rem;border-radius:4px;">＋ New Invoice</a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main>
+<div class="container">
+
+    <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">🧾</div><div class="stat-value" id="totalBills">0</div><div class="stat-label">Total Bills</div></div>
+        <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-value" id="draftBills">0</div><div class="stat-label">Draft</div></div>
+        <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" id="paidBills">0</div><div class="stat-label">Paid</div></div>
+        <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-value" id="overdueBills">0</div><div class="stat-label">Overdue</div></div>
+        <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value" id="totalRevenue">₹0</div><div class="stat-label">Total Revenue</div></div>
+    </div>
+
+    <div class="content-card">
+        <div class="content-header">
+            <h2><i class="fas fa-list"></i> All Invoices</h2>
+        </div>
+        <div class="content-body">
+            <div class="filters">
+                <input type="text" class="form-control" id="searchInput" placeholder="🔍  Search by invoice # or customer...">
+                <select class="form-select" id="statusFilter">
+                    <option value="">All Status</option>
+                    <option value="DRAFT">Draft</option>
+                    <option value="PAID">Paid</option>
+                    <option value="OVERDUE">Overdue</option>
+                </select>
+                <input type="date" class="form-control" id="dateFilter">
+                <button class="btn" onclick="filterBills()"><i class="fas fa-filter"></i> Filter</button>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Date</th>
+                            <th>Due Date</th>
+                            <th>Customer</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Source QT</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="billsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+</main>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="detailModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="modalTitle">🧾 Invoice Details</h3>
+            <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let bills = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadBills();
+        loadStatistics();
+        document.getElementById('searchInput').addEventListener('keyup', filterBills);
+        document.getElementById('statusFilter').addEventListener('change', filterBills);
+        document.getElementById('dateFilter').addEventListener('change', filterBills);
+    });
+
+    function loadBills() {
+        fetch('/api/bills')
+            .then(r => r.json())
+            .then(data => { bills = data; displayBills(data); })
+            .catch(e => console.error(e));
+    }
+
+    function loadStatistics() {
+        fetch('/api/bills/statistics')
+            .then(r => r.json())
+            .then(s => {
+                document.getElementById('totalBills').textContent   = s.totalBills  || 0;
+                document.getElementById('draftBills').textContent   = s.draftBills  || 0;
+                document.getElementById('paidBills').textContent    = s.paidBills   || 0;
+                document.getElementById('overdueBills').textContent = s.overdueBills|| 0;
+                document.getElementById('totalRevenue').textContent = '₹' + ((s.totalRevenue || 0).toLocaleString('en-IN'));
+            })
+            .catch(e => console.error(e));
+    }
+
+    function displayBills(data) {
+        const tbody = document.getElementById('billsTableBody');
+        tbody.innerHTML = '';
+
+        if (!data.length) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:3rem;">No invoices found. <a href="/bill" style="color:var(--amber)">Create your first invoice →</a></td></tr>';
+            return;
+        }
+
+        data.forEach(b => {
+            const grandTotal = computeGrandTotal(b);
+            const statusClass = 'status-' + (b.status || 'draft').toLowerCase();
+            const qtRef = b.sourceQuotationNumber
+                ? `<span class="qt-ref">📋 ${b.sourceQuotationNumber}</span>`
+                : '<span style="color:var(--text-muted);font-size:0.8rem;">—</span>';
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${b.billNumber || '—'}</strong></td>
+                    <td>${formatDate(b.date)}</td>
+                    <td>${formatDate(b.dueDate)}</td>
+                    <td>${b.customerName || 'N/A'}</td>
+                    <td>₹${grandTotal.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+                    <td><span class="status-badge ${statusClass}">${b.status || 'DRAFT'}</span></td>
+                    <td>${qtRef}</td>
+                    <td>
+                        <button class="action-btn" onclick="viewBill(${b.id})" title="View Details"><i class="fas fa-eye"></i></button>
+                        <button class="action-btn btn-whatsapp" onclick="sendWhatsApp(${b.id}, this)" title="Send WhatsApp" style="background: #25D366; color: white;"><i class="fab fa-whatsapp"></i> Send WhatsApp</button>
+                        <button class="action-btn" onclick="deleteBill(${b.id})" title="Delete"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`;
+        });
+    }
+
+    function computeGrandTotal(b) {
+        if (!b.items || !b.items.length) return 0;
+        const subtotal = b.items.reduce((s, i) => s + ((i.quantity || 0) * (i.unitPrice || 0)), 0);
+        const tax  = subtotal * ((b.taxRate  || 0) / 100);
+        const disc = subtotal * ((b.discount || 0) / 100);
+        return subtotal + tax - disc;
+    }
+
+    function filterBills() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const status = document.getElementById('statusFilter').value;
+        const date   = document.getElementById('dateFilter').value;
+        displayBills(bills.filter(b =>
+            ((b.billNumber || '').toLowerCase().includes(search) || (b.customerName || '').toLowerCase().includes(search)) &&
+            (!status || b.status === status) &&
+            (!date   || b.date === date)
+        ));
+    }
+
+    function viewBill(id) {
+        const b = bills.find(x => x.id === id);
+        if (!b) return;
+        const grandTotal = computeGrandTotal(b);
+        const subtotal   = b.items ? b.items.reduce((s,i) => s + ((i.quantity||0)*(i.unitPrice||0)),0) : 0;
+        const tax        = subtotal * ((b.taxRate ||0)/100);
+        const disc       = subtotal * ((b.discount||0)/100);
+
+        document.getElementById('modalTitle').textContent = '🧾 ' + (b.billNumber || 'Invoice');
+        document.getElementById('modalBody').innerHTML = `
+            <div class="detail-row"><span class="detail-label">Invoice #</span><span class="detail-value amber">${b.billNumber||'—'}</span></div>
+            <div class="detail-row"><span class="detail-label">Customer</span><span class="detail-value">${b.customerName||'—'}</span></div>
+            <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value">${b.customerPhone||'—'}</span></div>
+            <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value">${b.customerEmail||'—'}</span></div>
+            <div class="detail-row"><span class="detail-label">Invoice Date</span><span class="detail-value">${formatDate(b.date)}</span></div>
+            <div class="detail-row"><span class="detail-label">Due Date</span><span class="detail-value">${formatDate(b.dueDate)}</span></div>
+            <div class="detail-row"><span class="detail-label">Items</span><span class="detail-value">${(b.items||[]).length} line item(s)</span></div>
+            <div class="detail-row"><span class="detail-label">Subtotal</span><span class="detail-value">₹${subtotal.toFixed(2)}</span></div>
+            ${b.discount > 0 ? `<div class="detail-row"><span class="detail-label">Discount (${b.discount}%)</span><span class="detail-value">-₹${disc.toFixed(2)}</span></div>` : ''}
+            ${b.taxRate  > 0 ? `<div class="detail-row"><span class="detail-label">GST (${b.taxRate}%)</span><span class="detail-value">₹${tax.toFixed(2)}</span></div>` : ''}
+            <div class="detail-row"><span class="detail-label">Grand Total</span><span class="detail-value green" style="font-size:1.1rem;">₹${grandTotal.toFixed(2)}</span></div>
+            <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value">${b.status||'DRAFT'}</span></div>
+            ${b.sourceQuotationNumber ? `<div class="detail-row"><span class="detail-label">Source Quotation</span><span class="detail-value amber">${b.sourceQuotationNumber}</span></div>` : ''}
+            ${b.notes ? `<div class="detail-row"><span class="detail-label">Notes</span><span class="detail-value">${b.notes}</span></div>` : ''}
+        `;
+        document.getElementById('detailModal').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('detailModal').classList.remove('active');
+    }
+
+
+
+    function deleteBill(id) {
+        if (!confirm('⚠ Delete this invoice? This cannot be undone.')) return;
+        fetch(`/api/bills/${id}`, { method: 'DELETE' })
+            .then(() => { loadBills(); loadStatistics(); showToast('Invoice deleted', 'success'); })
+            .catch(() => showToast('✗ Error deleting invoice', 'error'));
+    }
+
+    function showToast(msg, type) {
+        const t = document.createElement('div');
+        t.className = 'toast';
+        t.textContent = msg;
+        t.style.background = type === 'success' ? '#38ef7d' : '#ff6b35';
+        t.style.color = type === 'success' ? '#0a0a0a' : 'white';
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 3000);
+    }
+
+    function formatDate(d) {
+        if (!d) return '—';
+        return new Date(d).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+    }
+
+    function sendWhatsApp(id, btn) {
+        const originalText = btn.innerHTML;
+        btn.innerText = 'Sending...';
+        btn.disabled = true;
+        
+        fetch(`/api/bills/${id}/send-whatsapp`, {
+            method: 'POST'
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Invoice sent on WhatsApp successfully!');
+            } else {
+                alert('Failed to send. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to send. Please try again.');
+        })
+        .finally(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    }
+</script>
+</body>
+</html>

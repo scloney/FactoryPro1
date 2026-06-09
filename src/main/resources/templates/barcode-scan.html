@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan Barcode & Update Stock | Factory Pro Tools</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff6b35;
+            --secondary: #1a1a1a;
+            --accent: #f7931e;
+            --bg: #0a0a0a;
+            --card-bg: #1a1a1a;
+            --text: #e0e0e0;
+            --text-muted: #888;
+            --border: #333;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Work Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 107, 53, 0.03) 2px, rgba(255, 107, 53, 0.03) 4px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255, 107, 53, 0.03) 2px, rgba(255, 107, 53, 0.03) 4px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        header {
+            padding: 2rem 0;
+            border-bottom: 2px solid var(--border);
+            background: rgba(26, 26, 26, 0.8);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        header h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .scan-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .scan-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s;
+            margin-bottom: 2rem;
+        }
+
+        .card h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8rem;
+            letter-spacing: 2px;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #reader {
+            width: 100%;
+            background: #000;
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        /* Styling buttons of html5-qrcode */
+        #reader button {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 10px;
+            font-size: 0.8rem;
+            font-family: 'Work Sans', sans-serif;
+            transition: all 0.3s;
+        }
+
+        #reader button:hover {
+            transform: scale(1.03);
+            box-shadow: 0 5px 15px rgba(255, 107, 53, 0.4);
+        }
+
+        #reader select {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.4rem;
+            margin: 10px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 2rem;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            font-family: 'Work Sans', sans-serif;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 53, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        /* Product details card */
+        .details-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px dashed var(--border);
+            padding: 1.5rem;
+            border-radius: 4px;
+            margin-top: 1.5rem;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 0.5rem 0;
+        }
+
+        .detail-row:last-child {
+            border: none;
+        }
+
+        .detail-label {
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .detail-value {
+            font-weight: bold;
+            color: #fff;
+        }
+
+        /* Stock update form */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .radio-option input[type="radio"] {
+            accent-color: var(--primary);
+            width: 1.2rem;
+            height: 1.2rem;
+        }
+
+        .input-number {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 1.2rem;
+            font-family: 'Work Sans', sans-serif;
+            text-align: center;
+        }
+
+        .input-number:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 107, 53, 0.05);
+        }
+
+        /* Feedback overlays */
+        .toast-msg {
+            padding: 1rem;
+            border-radius: 4px;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .toast-success {
+            background: rgba(40, 167, 69, 0.2);
+            border: 1px solid var(--success);
+            color: #2ced5e;
+        }
+
+        .toast-error {
+            background: rgba(220, 53, 69, 0.2);
+            border: 1px solid var(--danger);
+            color: #f75c6d;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: var(--border);
+        }
+
+        /* Unified Navigation Styles */
+        .nav-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .nav-btn {
+            display: inline-block;
+            padding: 0.6rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text, #e0e0e0) !important;
+            text-decoration: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            border-radius: 4px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, var(--primary, #ff6b35), var(--accent, #f7931e));
+            color: white !important;
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(135deg, var(--primary, #ff6b35), var(--accent, #f7931e));
+            color: white !important;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.2);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div>
+                <h1>Mobile Barcode Scan</h1>
+                <p>Scan product barcodes using mobile camera to adjust inventory levels in real-time</p>
+            </div>
+            <div class="nav-buttons">
+                <a href="/" class="nav-btn" title="Home">Home</a>
+                <a href="/optimizer" class="nav-btn" title="Plywood Optimizer">Optimizer</a>
+                <a href="/quotations-list" class="nav-btn" title="Quotations List">Quotations</a>
+                <a href="/sales-orders" class="nav-btn" title="Sales Orders">Sales Orders</a>
+                <a href="/bills" class="nav-btn" title="Bills List">Bills</a>
+                <a href="/inventory" class="nav-btn" title="Inventory Management">Inventory</a>
+                <a href="/suppliers" class="nav-btn" title="Supplier Management">Suppliers</a>
+                <a href="/purchase-orders" class="nav-btn" title="Purchase Orders">Purchase Orders</a>
+                <a href="/customers" class="nav-btn" title="Customer Management">Customers</a>
+                <a href="/barcode/print" class="nav-btn" title="Print Barcodes">Barcode Print</a>
+                <a href="/barcode/scan" class="nav-btn active" title="Scan &amp; Update Stock">Barcode Scan</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div id="toast" class="toast-msg"></div>
+
+        <div class="scan-grid">
+            <!-- Section A: Camera Feed & Local Input -->
+            <div>
+                <div class="card">
+                    <h2><i class="fas fa-camera"></i> Live Scanner</h2>
+                    <div id="reader"></div>
+                </div>
+
+                <div class="card">
+                    <h2><i class="fas fa-keyboard"></i> Manual Barcode Value</h2>
+                    <div class="form-group" style="display: flex; gap: 0.5rem; margin-bottom: 0;">
+                        <input type="text" id="manualBarcode" class="input-number" placeholder="Enter PLY-... code manually" style="text-align: left; font-size: 1rem; flex-grow: 1; padding: 0.6rem;">
+                        <button class="btn btn-secondary" onclick="fetchProductManually()" style="padding: 0.6rem 1.2rem;">
+                            <i class="fas fa-search"></i> Find
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section B: Product & Stock Adjustment -->
+            <div>
+                <div class="card" id="detailsCard" style="min-height: 480px;">
+                    <h2><i class="fas fa-info-circle"></i> Scanned Product Info</h2>
+
+                    <!-- Empty state before scan -->
+                    <div id="emptyState" class="empty-state">
+                        <i class="fas fa-barcode"></i>
+                        <h3>Ready to Scan</h3>
+                        <p>Position a product barcode or QR code inside the camera viewfinder, or type a barcode manually above.</p>
+                    </div>
+
+                    <!-- Details state after scan -->
+                    <div id="detailsState" style="display: none;">
+                        <div class="details-box">
+                            <div class="detail-row">
+                                <span class="detail-label">Product Name</span>
+                                <span class="detail-value" id="prodName">Premium MDF Board</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Unit</span>
+                                <span class="detail-value" id="prodUnit">Sheets</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Current Stock</span>
+                                <span class="detail-value" id="prodStock" style="color: var(--accent); font-size: 1.2rem;">15.0</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Decoded Barcode</span>
+                                <span class="detail-value" id="prodBarcode" style="font-family: monospace;">PLY-2-12345</span>
+                            </div>
+                        </div>
+
+                        <div class="card" style="border-color: var(--border); padding: 1.5rem; margin-top: 1.5rem; margin-bottom: 0; background: rgba(0,0,0,0.2);">
+                            <h3 style="color: var(--accent); font-size: 1.2rem; margin-bottom: 1rem; font-family: 'Bebas Neue'; letter-spacing: 1px;">Update Stock Level</h3>
+                            
+                            <input type="hidden" id="activeProductId">
+                            <input type="hidden" id="activeBarcodeValue">
+
+                            <div class="form-group">
+                                <label>Adjustment Direction</label>
+                                <div class="radio-group">
+                                    <label class="radio-option" style="color: #2ced5e;">
+                                        <input type="radio" name="adjustType" value="IN" checked>
+                                        <i class="fas fa-plus-circle"></i> Stock IN
+                                    </label>
+                                    <label class="radio-option" style="color: #f75c6d;">
+                                        <input type="radio" name="adjustType" value="OUT">
+                                        <i class="fas fa-minus-circle"></i> Stock OUT
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Quantity to adjust</label>
+                                <input type="number" id="adjustQty" class="input-number" value="1" min="1" step="1">
+                            </div>
+
+                            <button class="btn btn-primary" onclick="submitStockAdjustment()">
+                                <i class="fas fa-save"></i> Save Adjustment
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include html5-qrcode library from CDN -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <script th:inline="javascript">
+        let html5QrcodeScanner = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeScanner();
+        });
+
+        function initializeScanner() {
+            html5QrcodeScanner = new Html5QrcodeScanner(
+                "reader", 
+                { 
+                    fps: 10, 
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0
+                },
+                /* verbose= */ false
+            );
+            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+        }
+
+        // On successful scan
+        function onScanSuccess(decodedText, decodedResult) {
+            console.log(`Code matched = ${decodedText}`, decodedResult);
+            // Play a soft beep feedback (optional, standard in scanner UIs)
+            playBeep();
+            
+            // Query backend for product
+            fetchProduct(decodedText);
+        }
+
+        function onScanFailure(error) {
+            // Silence debugging scanner failures to avoid excessive logs
+        }
+
+        // Play standard browser beep
+        function playBeep() {
+            try {
+                let context = new (window.AudioContext || window.webkitAudioContext)();
+                let osc = context.createOscillator();
+                osc.type = "sine";
+                osc.frequency.value = 1000;
+                osc.connect(context.destination);
+                osc.start();
+                setTimeout(() => osc.stop(), 80);
+            } catch (e) {
+                console.log("Audio not allowed or supported yet");
+            }
+        }
+
+        // Fetch product via GET API using decoded value
+        function fetchProduct(barcodeVal) {
+            fetch(`/api/barcode/scan?barcodeValue=${encodeURIComponent(barcodeVal)}`)
+            .then(res => {
+                if (res.status === 404) {
+                    throw new Error("Product not registered in database");
+                }
+                if (!res.ok) {
+                    throw new Error("Could not decode or find product");
+                }
+                return res.json();
+            })
+            .then(product => {
+                showProductDetails(product);
+                showToast("Product barcode successfully scanned!", "success");
+            })
+            .catch(err => {
+                showToast(err.message, "error");
+                hideProductDetails();
+            });
+        }
+
+        // Manual search trigger
+        function fetchProductManually() {
+            const val = document.getElementById('manualBarcode').value.trim();
+            if (!val) {
+                alert("Please enter a valid barcode value first.");
+                return;
+            }
+            fetchProduct(val);
+        }
+
+        function showProductDetails(product) {
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('detailsState').style.display = 'block';
+
+            document.getElementById('prodName').textContent = product.name;
+            document.getElementById('prodUnit').textContent = product.unit;
+            document.getElementById('prodStock').textContent = `${product.currentStock} ${product.unit}`;
+            document.getElementById('prodBarcode').textContent = product.barcodeValue;
+
+            document.getElementById('activeProductId').value = product.id;
+            document.getElementById('activeBarcodeValue').value = product.barcodeValue;
+            
+            // Set adjust qty input back to 1
+            document.getElementById('adjustQty').value = 1;
+        }
+
+        function hideProductDetails() {
+            document.getElementById('emptyState').style.display = 'flex';
+            document.getElementById('detailsState').style.display = 'none';
+            document.getElementById('activeProductId').value = '';
+            document.getElementById('activeBarcodeValue').value = '';
+        }
+
+        // Submit Stock adjustment (IN / OUT) via POST
+        function submitStockAdjustment() {
+            const barcodeVal = document.getElementById('activeBarcodeValue').value;
+            const qty = document.getElementById('adjustQty').value;
+            const type = document.querySelector('input[name="adjustType"]:checked').value;
+
+            if (!barcodeVal || !qty || qty <= 0) {
+                alert("Please make sure a product is active and a valid adjustment quantity is specified.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("barcodeValue", barcodeVal);
+            formData.append("stockChange", qty);
+            formData.append("type", type);
+
+            fetch('/api/barcode/scan-and-update-stock', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => {
+                if (!res.ok) {
+                    return res.json().then(errData => {
+                        throw new Error(errData.error || "Failed to update stock");
+                    });
+                }
+                return res.json();
+            })
+            .then(data => {
+                // Show success feedback and update stock label
+                showToast(`Stock updated! Level adjusted from ${data.previousStock} to ${data.newStock}`, "success");
+                
+                // Refresh product stock label
+                document.getElementById('prodStock').textContent = `${data.newStock} ${document.getElementById('prodUnit').textContent}`;
+                
+                // Reset manual input just in case
+                document.getElementById('manualBarcode').value = '';
+            })
+            .catch(err => {
+                showToast(err.message, "error");
+            });
+        }
+
+        function showToast(msg, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.className = `toast-msg toast-${type}`;
+            toast.style.display = 'block';
+
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

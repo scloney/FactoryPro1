@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Login | Factory Pro Tools</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00c6ff;
+            --secondary: #1a1a2e;
+            --accent: #0072ff;
+            --bg: #0a0a0f;
+            --card-bg: #12122a;
+            --text: #e0e0f0;
+            --text-muted: #7070a0;
+            --border: #2a2a4a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Work Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,198,255,0.03) 2px, rgba(0,198,255,0.03) 4px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,198,255,0.03) 2px, rgba(0,198,255,0.03) 4px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: 0;
+            pointer-events: none;
+            animation: pulse 8s ease-in-out infinite alternate;
+        }
+        .orb-1 { width: 400px; height: 400px; background: rgba(0,114,255,0.12); top: -100px; right: -100px; }
+        .orb-2 { width: 300px; height: 300px; background: rgba(0,198,255,0.08); bottom: -80px; left: -80px; animation-delay: -4s; }
+
+        @keyframes pulse {
+            from { transform: scale(1); opacity: 0.5; }
+            to { transform: scale(1.15); opacity: 1; }
+        }
+
+        .login-wrapper {
+            display: flex;
+            width: 100%;
+            max-width: 900px;
+            min-height: 500px;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.7);
+        }
+
+        .login-brand {
+            flex: 1;
+            background: linear-gradient(135deg, #0072ff, #00c6ff);
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-brand::before {
+            content: '';
+            position: absolute;
+            width: 300px; height: 300px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 50%;
+            top: -80px; right: -80px;
+        }
+
+        .login-brand h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            letter-spacing: 3px;
+            color: white;
+            line-height: 1;
+            margin-bottom: 1rem;
+        }
+
+        .login-brand p { color: rgba(255,255,255,0.85); font-size: 1rem; line-height: 1.7; }
+
+        .brand-features { margin-top: 2rem; list-style: none; }
+        .brand-features li {
+            color: rgba(255,255,255,0.9);
+            padding: 0.4rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.95rem;
+        }
+        .brand-features li::before { content: '✓'; font-weight: 700; }
+
+        .login-form-side {
+            flex: 1;
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-left: none;
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .login-form-side::before {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 100%; height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+        }
+
+        .form-header { margin-bottom: 2rem; }
+        .form-header h3 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8rem;
+            letter-spacing: 2px;
+            color: var(--primary);
+            margin-bottom: 0.3rem;
+        }
+        .form-header p { color: var(--text-muted); font-size: 0.9rem; }
+
+        .form-group { margin-bottom: 1.4rem; }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .input-wrap { position: relative; }
+        .input-wrap i {
+            position: absolute;
+            left: 0.9rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.8rem 0.8rem 0.8rem 2.5rem;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 1rem;
+            font-family: 'Work Sans', sans-serif;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(0,198,255,0.05);
+            box-shadow: 0 0 0 3px rgba(0,198,255,0.1);
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            background: linear-gradient(135deg, var(--accent), var(--primary));
+            color: white;
+            padding: 0.9rem;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            transition: all 0.3s;
+            font-size: 1rem;
+            font-family: 'Work Sans', sans-serif;
+            margin-top: 0.5rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,198,255,0.35);
+        }
+
+        .alert {
+            padding: 0.8rem 1rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .alert-error { color: #ff6b6b; background: rgba(255,107,107,0.1); border: 1px solid rgba(255,107,107,0.3); }
+        .alert-success { color: #38ef7d; background: rgba(56,239,125,0.1); border: 1px solid rgba(56,239,125,0.3); }
+
+        .register-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        .register-link a { color: var(--primary); text-decoration: none; font-weight: 600; }
+        .register-link a:hover { text-decoration: underline; }
+
+        .admin-link {
+            text-align: center;
+            margin-top: 0.8rem;
+            font-size: 0.8rem;
+        }
+        .admin-link a { color: var(--text-muted); text-decoration: none; }
+        .admin-link a:hover { color: var(--text); }
+
+        @media (max-width: 700px) {
+            .login-brand { display: none; }
+            .login-form-side { border-left: 2px solid var(--border); }
+        }
+    </style>
+</head>
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div class="login-wrapper">
+        <!-- Brand Panel -->
+        <div class="login-brand">
+            <h2>Customer<br>Portal</h2>
+            <p>Access your quotations and invoices anytime, anywhere.</p>
+            <ul class="brand-features">
+                <li>View your quotations</li>
+                <li>Track your bills &amp; payments</li>
+                <li>Download PDF invoices</li>
+                <li>Secure &amp; private access</li>
+            </ul>
+        </div>
+
+        <!-- Form Panel -->
+        <div class="login-form-side">
+            <div class="form-header">
+                <h3>Sign In</h3>
+                <p>Enter your phone number and password</p>
+            </div>
+
+            <div th:if="${param.error}" class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                Invalid phone number or password.
+            </div>
+            <div th:if="${param.logout}" class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                You have been logged out.
+            </div>
+            <div th:if="${param.registered}" class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                Account created! Welcome, <span th:text="${param.name}">Customer</span>. Please login.
+            </div>
+
+            <form th:action="@{/customer/login}" method="post">
+                <div class="form-group">
+                    <label for="username">Phone Number</label>
+                    <div class="input-wrap">
+                        <i class="fas fa-phone"></i>
+                        <input type="text" id="username" name="username" placeholder="Enter your phone number" required autofocus>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrap">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn">
+                    <i class="fas fa-sign-in-alt"></i> Sign In
+                </button>
+            </form>
+
+            <div class="register-link">
+                New customer? <a th:href="@{/customer/register}">Create your account</a>
+            </div>
+            <div class="admin-link">
+                <a th:href="@{/login}">← Admin / Staff Login</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

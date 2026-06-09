@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Registration | Factory Pro Tools</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00c6ff;
+            --accent: #0072ff;
+            --bg: #0a0a0f;
+            --card-bg: #12122a;
+            --text: #e0e0f0;
+            --text-muted: #7070a0;
+            --border: #2a2a4a;
+            --success: #38ef7d;
+            --danger: #ff6b6b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Work Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,198,255,0.03) 2px, rgba(0,198,255,0.03) 4px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,198,255,0.03) 2px, rgba(0,198,255,0.03) 4px);
+            pointer-events: none;
+        }
+
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: 0;
+            pointer-events: none;
+            animation: pulse 8s ease-in-out infinite alternate;
+        }
+        .orb-1 { width: 350px; height: 350px; background: rgba(0,114,255,0.1); top: -100px; right: -100px; }
+        .orb-2 { width: 280px; height: 280px; background: rgba(0,198,255,0.07); bottom: -60px; left: -60px; animation-delay: -4s; }
+        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.15); } }
+
+        .register-card {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 480px;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+        }
+
+        .register-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--primary));
+        }
+
+        .card-header { text-align: center; margin-bottom: 2rem; }
+        .card-header .icon {
+            width: 60px; height: 60px;
+            background: linear-gradient(135deg, var(--accent), var(--primary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 1.5rem;
+            color: white;
+        }
+        .card-header h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            letter-spacing: 2px;
+            color: var(--primary);
+            margin-bottom: 0.3rem;
+        }
+        .card-header p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; }
+
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+        .step {
+            flex: 1;
+            height: 3px;
+            border-radius: 2px;
+            background: var(--border);
+            transition: background 0.4s;
+        }
+        .step.active { background: linear-gradient(90deg, var(--accent), var(--primary)); }
+        .step-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+        }
+
+        .info-box {
+            background: rgba(0,198,255,0.07);
+            border: 1px solid rgba(0,198,255,0.2);
+            border-radius: 4px;
+            padding: 0.9rem 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 0.6rem;
+            align-items: flex-start;
+            font-size: 0.88rem;
+            color: var(--primary);
+            line-height: 1.5;
+        }
+        .info-box i { margin-top: 2px; flex-shrink: 0; }
+
+        .form-group { margin-bottom: 1.3rem; }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+        .input-wrap { position: relative; }
+        .input-wrap i {
+            position: absolute;
+            left: 0.9rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 0.85rem 0.8rem 0.85rem 2.5rem;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 1rem;
+            font-family: 'Work Sans', sans-serif;
+            transition: all 0.3s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(0,198,255,0.05);
+            box-shadow: 0 0 0 3px rgba(0,198,255,0.1);
+        }
+        .form-hint { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; }
+
+        .btn {
+            display: block;
+            width: 100%;
+            background: linear-gradient(135deg, var(--accent), var(--primary));
+            color: white;
+            padding: 0.9rem;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            transition: all 0.3s;
+            font-size: 1rem;
+            font-family: 'Work Sans', sans-serif;
+            margin-top: 0.5rem;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,198,255,0.35);
+        }
+
+        .alert {
+            padding: 0.85rem 1rem;
+            margin-bottom: 1.2rem;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+            line-height: 1.5;
+        }
+        .alert-error {
+            color: var(--danger);
+            background: rgba(255,107,107,0.1);
+            border: 1px solid rgba(255,107,107,0.3);
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        .login-link a { color: var(--primary); text-decoration: none; font-weight: 600; }
+        .login-link a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div class="register-card">
+        <div class="card-header">
+            <div class="icon"><i class="fas fa-user-plus"></i></div>
+            <h2>Create Account</h2>
+            <p>Register using your phone number that's linked with our system.</p>
+        </div>
+
+        <div class="step-indicator">
+            <span class="step-label">Verify</span>
+            <div class="step active"></div>
+            <span class="step-label">Secure</span>
+            <div class="step active"></div>
+            <span class="step-label">Done</span>
+        </div>
+
+        <div class="info-box">
+            <i class="fas fa-info-circle"></i>
+            <span>Your phone number must be registered in our customer database. Contact your sales representative if you're unable to register.</span>
+        </div>
+
+        <div th:if="${error}" class="alert alert-error">
+            <i class="fas fa-exclamation-circle"></i>
+            <span th:text="${error}">Error message</span>
+        </div>
+
+        <form th:action="@{/customer/register}" method="post">
+            <div class="form-group">
+                <label for="phone"><i class="fas fa-phone"></i> Phone Number</label>
+                <div class="input-wrap">
+                    <i class="fas fa-phone"></i>
+                    <input type="text" id="phone" name="phone"
+                           th:value="${phone}"
+                           placeholder="e.g. 9876543210"
+                           required autofocus
+                           pattern="[0-9+\-\s]{7,15}">
+                </div>
+                <div class="form-hint">Use the number registered with our team</div>
+            </div>
+
+            <div class="form-group">
+                <label for="password"><i class="fas fa-lock"></i> Create Password</label>
+                <div class="input-wrap">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" name="password"
+                           placeholder="Minimum 6 characters"
+                           required minlength="6">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword"><i class="fas fa-lock"></i> Confirm Password</label>
+                <div class="input-wrap">
+                    <i class="fas fa-shield-alt"></i>
+                    <input type="password" id="confirmPassword" name="confirmPassword"
+                           placeholder="Re-enter your password"
+                           required minlength="6">
+                </div>
+            </div>
+
+            <button type="submit" class="btn">
+                <i class="fas fa-user-check"></i> Create Account
+            </button>
+        </form>
+
+        <div class="login-link">
+            Already have an account? <a th:href="@{/customer/login}">Sign in here</a>
+        </div>
+    </div>
+
+    <script>
+        // Client-side password match check
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const p = document.getElementById('password').value;
+            const cp = document.getElementById('confirmPassword').value;
+            if (p !== cp) {
+                e.preventDefault();
+                alert('Passwords do not match. Please try again.');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bill Maker | Factory Pro Tools</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff6b35;
+            --secondary: #1a1a1a;
+            --accent: #f7931e;
+            --bg: #0a0a0a;
+            --card-bg: #1a1a1a;
+            --text: #e0e0e0;
+            --text-muted: #888;
+            --border: #333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Work Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Background Pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 107, 53, 0.03) 2px, rgba(255, 107, 53, 0.03) 4px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255, 107, 53, 0.03) 2px, rgba(255, 107, 53, 0.03) 4px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Header */
+        header {
+            padding: 2rem 0;
+            border-bottom: 2px solid var(--border);
+            background: rgba(26, 26, 26, 0.8);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .back-btn {
+            display: inline-block;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            color: var(--primary);
+        }
+
+        header h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Card */
+        .card {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 107, 53, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .card:hover::before {
+            left: 100%;
+        }
+
+        .card:hover {
+            border-color: var(--primary);
+        }
+
+        .card h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8rem;
+            letter-spacing: 2px;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 0;
+            color: var(--text);
+            font-size: 1rem;
+            font-family: 'Work Sans', sans-serif;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 107, 53, 0.05);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+        }
+
+        table th,
+        table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        table th {
+            background: rgba(255, 107, 53, 0.1);
+            font-weight: 600;
+            color: var(--primary);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        table td {
+            color: var(--text);
+        }
+
+        table tbody tr {
+            transition: all 0.3s;
+        }
+
+        table tbody tr:hover {
+            background: rgba(255, 107, 53, 0.05);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 2rem;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            font-family: 'Work Sans', sans-serif;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(255, 107, 53, 0.4);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+        }
+
+        /* Totals */
+        .totals {
+            text-align: right;
+            padding: 1.5rem;
+            background: rgba(255, 107, 53, 0.05);
+            border-left: 3px solid var(--primary);
+            margin-top: 2rem;
+        }
+
+        .totals div {
+            margin: 0.8rem 0;
+            font-size: 1.1rem;
+            color: var(--text);
+        }
+
+        .totals .grand-total {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary);
+            padding-top: 1rem;
+            margin-top: 1rem;
+            border-top: 2px solid var(--primary);
+            font-family: 'Bebas Neue', sans-serif;
+            letter-spacing: 2px;
+        }
+
+        /* Action Container */
+        .action-container {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 2rem;
+            }
+
+            table {
+                font-size: 0.85rem;
+            }
+
+            table th,
+            table td {
+                padding: 0.5rem;
+            }
+        }
+        .qt-source-banner {
+            background: rgba(245,158,11,0.10);
+            border-left: 4px solid #f59e0b;
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.92rem;
+            color: #f59e0b;
+            gap: 1rem;
+        }
+        .qt-source-banner strong { color: #fbbf24; }
+        .qt-source-banner a.escape-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.82rem;
+            border: 1px solid var(--border);
+            padding: 0.3rem 0.8rem;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .qt-source-banner a.escape-link:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* Unified Navigation Styles */
+        .nav-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .nav-btn {
+            display: inline-block;
+            padding: 0.6rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text, #e0e0e0) !important;
+            text-decoration: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            border-radius: 4px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, var(--primary, #ff6b35), var(--accent, #f7931e));
+            color: white !important;
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(135deg, var(--primary, #ff6b35), var(--accent, #f7931e));
+            color: white !important;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.2);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+            <div>
+                <h1>Bill Maker</h1>
+                <p>Generate Professional Invoices</p>
+            </div>
+            <div class="nav-buttons">
+                <a href="/" class="nav-btn" title="Home">Home</a>
+                <a href="/optimizer" class="nav-btn" title="Plywood Optimizer">Optimizer</a>
+                <a href="/quotations-list" class="nav-btn" title="Quotations List">Quotations</a>
+                <a href="/sales-orders" class="nav-btn" title="Sales Orders">Sales Orders</a>
+                <a href="/bills" class="nav-btn active" title="Bills List">Bills</a>
+                <a href="/inventory" class="nav-btn" title="Inventory Management">Inventory</a>
+                <a href="/suppliers" class="nav-btn" title="Supplier Management">Suppliers</a>
+                <a href="/purchase-orders" class="nav-btn" title="Purchase Orders">Purchase Orders</a>
+                <a href="/customers" class="nav-btn" title="Customer Management">Customers</a>
+                <a href="/barcode/print" class="nav-btn" title="Print Barcodes">Barcode Print</a>
+                <a href="/barcode/scan" class="nav-btn" title="Scan &amp; Update Stock">Barcode Scan</a>
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+
+        <!-- ===== SOURCE QUOTATION BANNER ===== -->
+        <div class="qt-source-banner" th:if="${sourceQuotation}">
+            <span>
+                📋 Pre-filled from quotation&nbsp;
+                <strong th:text="${sourceQuotation.quotationNumber}">QT-XXXX</strong>
+                &nbsp;·&nbsp; Customer:&nbsp;
+                <strong th:text="${sourceQuotation.customerName}">-</strong>
+            </span>
+            <a href="/bill" class="escape-link">✕ Start Scratch</a>
+        </div>
+
+        <div class="card">
+            <h2>Company Details</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Company Name</label>
+                    <input type="text" id="companyName" placeholder="Your Company Name"
+                           th:value="${bill != null ? bill.companyName : ''}">
+                </div>
+                <div class="form-group">
+                    <label>Company Phone</label>
+                    <input type="text" id="companyPhone" placeholder="+91-1234567890"
+                           th:value="${bill != null ? bill.companyPhone : ''}">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Company Address</label>
+                    <input type="text" id="companyAddress" placeholder="Company Address"
+                           th:value="${bill != null ? bill.companyAddress : ''}">
+                </div>
+                <div class="form-group">
+                    <label>Company Email</label>
+                    <input type="email" id="companyEmail" placeholder="info@company.com"
+                           th:value="${bill != null ? bill.companyEmail : ''}">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Company GSTIN</label>
+                    <input type="text" id="companyGSTIN" placeholder="22AAAAA0000A1Z5"
+                           th:value="${bill != null ? bill.companyGSTIN : ''}">
+                </div>
+                <div class="form-group">
+                    <label>Bank Details</label>
+                    <input type="text" id="bankDetails" placeholder="Bank Name, Account No, IFSC"
+                           th:value="${bill != null ? bill.bankDetails : ''}">
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Invoice Details</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Invoice Number</label>
+                    <input type="text" id="billNumber" placeholder="INV-2024-001"
+                           th:value="${bill != null ? bill.billNumber : ''}">
+                </div>
+                <div class="form-group">
+                    <label>Invoice Date</label>
+                    <input type="date" id="date"
+                           th:value="${bill != null and bill.date != null ? bill.date : ''}">
+                </div>
+                <div class="form-group">
+                    <label>Due Date</label>
+                    <input type="date" id="dueDate"
+                           th:value="${bill != null and bill.dueDate != null ? bill.dueDate : ''}">
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Customer Details</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Customer Name</label>
+                    <input type="text" id="customerName" placeholder="Customer Name"
+                           th:value="${bill != null ? bill.customerName : ''}">
+                </div>
+                <div class="form-group">
+                    <label>Customer Phone</label>
+                    <input type="text" id="customerPhone" placeholder="+91-9876543210"
+                           th:value="${bill != null ? bill.customerPhone : ''}">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Customer Address</label>
+                    <input type="text" id="customerAddress" placeholder="Customer Address"
+                           th:value="${bill != null ? bill.customerAddress : ''}">
+                </div>
+                <div class="form-group">
+                    <label>Customer Email</label>
+                    <input type="email" id="customerEmail" placeholder="customer@email.com"
+                           th:value="${bill != null ? bill.customerEmail : ''}">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Customer GSTIN</label>
+                    <input type="text" id="customerGSTIN" placeholder="22AAAAA0000A1Z5"
+                           th:value="${bill != null ? bill.customerGSTIN : ''}">
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Items</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" id="itemDescription" placeholder="Item description">
+                </div>
+                <div class="form-group">
+                    <label>Quantity</label>
+                    <input type="number" id="itemQuantity" value="1" min="1">
+                </div>
+                <div class="form-group">
+                    <label>Unit</label>
+                    <input type="text" id="itemUnit" placeholder="pcs, sqft, sheets" value="pcs">
+                </div>
+                <div class="form-group">
+                    <label>Unit Price (₹)</label>
+                    <input type="number" id="itemPrice" step="0.01">
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-success" onclick="addItem()">+ Add Item</button>
+                </div>
+            </div>
+            
+            <table id="itemsTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Description</th>
+                        <th>Quantity</th>
+                        <th>Unit</th>
+                        <th>Unit Price (₹)</th>
+                        <th>Total (₹)</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="itemsBody"></tbody>
+            </table>
+            
+            <div class="totals" id="totals"></div>
+        </div>
+        
+        <div class="card">
+            <h2>Additional Details</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>GST Rate (%)</label>
+                    <input type="number" id="taxRate" step="0.01"
+                           th:value="${bill != null ? bill.taxRate : 18}">
+                </div>
+                <div class="form-group">
+                    <label>Discount (%)</label>
+                    <input type="number" id="discount" step="0.01"
+                           th:value="${bill != null ? bill.discount : 0}">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Payment Terms</label>
+                    <input type="text" id="paymentTerms" placeholder="Net 30 days"
+                           th:value="${bill != null ? bill.paymentTerms : ''}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea id="notes" placeholder="Thank you for your business!"
+                          th:text="${bill != null ? bill.notes : ''}"></textarea>
+            </div>
+        </div>
+        
+        <div class="action-container">
+            <button class="btn btn-primary" onclick="generatePdf()">📥 Generate Invoice PDF</button>
+        </div>
+    </div>
+    
+    <script th:inline="javascript">
+        /*[- Server-seeded items from quotation (empty array in scratch mode) -]*/
+        let items = /*[[${bill != null and bill.items != null ? bill.items : {}}]]*/ [];
+
+        /*[- Normalize: ensure each entry has the shape the JS expects -]*/
+        items = items.map(i => ({
+            description: i.description || '',
+            quantity:    i.quantity    || 1,
+            unit:        i.unit        || 'Pcs',
+            unitPrice:   i.unitPrice   || 0
+        }));
+
+        /*[- Source quotation number (null in scratch mode) -]*/
+        const sourceQuotationNumber = /*[[${bill != null ? bill.sourceQuotationNumber : null}]]*/ null;
+
+        /*[- Initial status (pre-set by controller if SalesOrder is already PAID) -]*/
+        const initialStatus = /*[[${bill != null ? bill.status : null}]]*/ null;
+
+        // Set dates only when not already prefilled by the server
+        const dateEl    = document.getElementById('date');
+        const dueDateEl = document.getElementById('dueDate');
+        if (!dateEl.value) {
+            const today = new Date();
+            dateEl.valueAsDate = today;
+            const due = new Date(today);
+            due.setDate(due.getDate() + 30);
+            dueDateEl.valueAsDate = due;
+        }
+
+        // Render any server-seeded items immediately
+        if (items.length > 0) {
+            updateItemsTable();
+        }
+
+        function addItem() {
+            const description = document.getElementById('itemDescription').value;
+            const quantity = parseInt(document.getElementById('itemQuantity').value);
+            const unit = document.getElementById('itemUnit').value;
+            const unitPrice = parseFloat(document.getElementById('itemPrice').value);
+
+            if (!description || !quantity || !unit || !unitPrice) {
+                alert('Please fill in all item fields');
+                return;
+            }
+
+            items.push({ description, quantity, unit, unitPrice });
+            updateItemsTable();
+
+            // Clear inputs
+            document.getElementById('itemDescription').value = '';
+            document.getElementById('itemQuantity').value = '1';
+            document.getElementById('itemUnit').value = 'pcs';
+            document.getElementById('itemPrice').value = '';
+        }
+
+        function updateItemsTable() {
+            const tbody = document.getElementById('itemsBody');
+            tbody.innerHTML = '';
+
+            items.forEach((item, index) => {
+                const row = tbody.insertRow();
+                const total = item.quantity * item.unitPrice;
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.description}</td>
+                    <td>${item.quantity}</td>
+                    <td>${item.unit}</td>
+                    <td>₹ ${Number(item.unitPrice).toFixed(2)}</td>
+                    <td>₹ ${total.toFixed(2)}</td>
+                    <td><button class="btn btn-danger" onclick="removeItem(${index})">Remove</button></td>
+                `;
+            });
+
+            updateTotals();
+        }
+
+        function removeItem(index) {
+            items.splice(index, 1);
+            updateItemsTable();
+        }
+
+        function updateTotals() {
+            const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+            const taxRate = parseFloat(document.getElementById('taxRate').value) || 0;
+            const discount = parseFloat(document.getElementById('discount').value) || 0;
+
+            const taxAmount = subtotal * (taxRate / 100);
+            const discountAmount = subtotal * (discount / 100);
+            const grandTotal = subtotal + taxAmount - discountAmount;
+
+            document.getElementById('totals').innerHTML = `
+                <div>Subtotal: ₹ ${subtotal.toFixed(2)}</div>
+                ${discount > 0 ? `<div>Discount (${discount}%): - ₹ ${discountAmount.toFixed(2)}</div>` : ''}
+                ${taxRate > 0 ? `<div>GST (${taxRate}%): ₹ ${taxAmount.toFixed(2)}</div>` : ''}
+                <div class="grand-total">Grand Total: ₹ ${grandTotal.toFixed(2)}</div>
+            `;
+        }
+
+        // Update totals when tax or discount changes
+        document.getElementById('taxRate').addEventListener('input', updateTotals);
+        document.getElementById('discount').addEventListener('input', updateTotals);
+
+        async function generatePdf() {
+            if (items.length === 0) {
+                alert('Please add at least one item');
+                return;
+            }
+
+            const bill = {
+                billNumber:             document.getElementById('billNumber').value,
+                date:                   document.getElementById('date').value,
+                dueDate:                document.getElementById('dueDate').value,
+                customerName:           document.getElementById('customerName').value,
+                customerAddress:        document.getElementById('customerAddress').value,
+                customerPhone:          document.getElementById('customerPhone').value,
+                customerEmail:          document.getElementById('customerEmail').value,
+                customerGSTIN:          document.getElementById('customerGSTIN').value,
+                items:                  items,
+                taxRate:                parseFloat(document.getElementById('taxRate').value) || 0,
+                discount:               parseFloat(document.getElementById('discount').value) || 0,
+                paymentTerms:           document.getElementById('paymentTerms').value,
+                notes:                  document.getElementById('notes').value,
+                companyName:            document.getElementById('companyName').value,
+                companyAddress:         document.getElementById('companyAddress').value,
+                companyPhone:           document.getElementById('companyPhone').value,
+                companyEmail:           document.getElementById('companyEmail').value,
+                companyGSTIN:           document.getElementById('companyGSTIN').value,
+                bankDetails:            document.getElementById('bankDetails').value,
+                sourceQuotationNumber:  sourceQuotationNumber,
+                status:                 initialStatus || 'DRAFT'
+            };
+
+            try {
+                const response = await fetch('/bill/generate-pdf', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(bill)
+                });
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `invoice-${bill.billNumber}.pdf`;
+                a.click();
+                window.URL.revokeObjectURL(url);
+
+                // Auto-save bill to database (idempotent — same bill number is ignored)
+                try {
+                    await fetch('/api/bills', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(bill)
+                    });
+                } catch (saveErr) {
+                    console.warn('Bill saved to PDF but DB save failed:', saveErr);
+                }
+            } catch (error) {
+                alert('PDF generation failed: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

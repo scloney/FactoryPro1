@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quotations List | Factory Pro Tools</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff6b35;
+            --accent: #f7931e;
+            --bg: #0a0a0a;
+            --card-bg: #1a1a1a;
+            --text: #e0e0e0;
+            --text-muted: #888;
+            --border: #333;
+            --success: #38ef7d;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Work Sans', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background-image:
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,107,53,0.03) 2px, rgba(255,107,53,0.03) 4px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255,107,53,0.03) 2px, rgba(255,107,53,0.03) 4px);
+            pointer-events: none; z-index: 0;
+        }
+        .container { max-width: 1600px; margin: 0 auto; padding: 0 2rem; position: relative; z-index: 1; }
+
+        header { padding: 1.5rem 0; border-bottom: 2px solid var(--border); background: rgba(26,26,26,0.95); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 100; }
+        .header-content { display: flex; justify-content: space-between; align-items: center; }
+        .page-title { display: flex; align-items: center; gap: 1rem; }
+        .page-icon { width: 50px; height: 50px; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%); }
+        .page-title h1 { font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; letter-spacing: 2px; background: linear-gradient(90deg, var(--primary), var(--accent)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .btn { display: inline-block; background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; padding: 0.8rem 2rem; text-decoration: none; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s; border: none; cursor: pointer; font-size: 0.9rem; }
+        .btn:hover { transform: scale(1.05); box-shadow: 0 5px 20px rgba(255,107,53,0.4); }
+        .btn-secondary { background: var(--border); }
+        .btn-secondary:hover { background: var(--text-muted); }
+        .btn-green { background: linear-gradient(135deg, #11998e, #38ef7d); color: var(--bg); }
+        .btn-green:hover { box-shadow: 0 5px 20px rgba(56,239,125,0.4); transform: scale(1.05); }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1.5rem; margin: 2rem 0; }
+        .stat-card { background: var(--card-bg); border: 2px solid var(--border); padding: 1.5rem; transition: all 0.3s; }
+        .stat-card:hover { border-color: var(--primary); transform: translateY(-3px); }
+        .stat-icon { width: 50px; height: 50px; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1rem; clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%); }
+        .stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 2px; color: var(--primary); }
+        .stat-label { color: var(--text-muted); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+
+        .content-card { background: var(--card-bg); border: 2px solid var(--border); margin-bottom: 2rem; }
+        .content-header { padding: 1.5rem 2rem; border-bottom: 2px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, rgba(255,107,53,0.08), rgba(247,147,30,0.08)); }
+        .content-header h2 { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: 2px; color: var(--primary); }
+        .content-body { padding: 2rem; }
+
+        .filters { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; margin-bottom: 1.5rem; }
+        .form-control, .form-select { background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 0.8rem 1rem; font-family: 'Work Sans', sans-serif; transition: all 0.3s; width: 100%; }
+        .form-control:focus, .form-select:focus { outline: none; border-color: var(--primary); }
+
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: var(--bg); }
+        th { padding: 1rem; text-align: left; font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 1px; color: var(--primary); border-bottom: 2px solid var(--border); }
+        td { padding: 0.9rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        tbody tr { transition: all 0.2s; }
+        tbody tr:hover { background: rgba(255,107,53,0.04); }
+
+        .status-badge { display: inline-block; padding: 0.25rem 0.8rem; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; clip-path: polygon(6% 0%, 94% 0%, 100% 50%, 94% 100%, 6% 100%, 0% 50%); }
+        .status-draft    { background: #555; color: #fff; }
+        .status-sent     { background: #667eea; color: #fff; }
+        .status-accepted { background: var(--success); color: var(--bg); }
+        .status-rejected { background: #dc3545; color: #fff; }
+        .status-expired  { background: #555; color: #fff; }
+        .status-converted{ background: var(--primary); color: #fff; }
+
+        .approval-badge { display: inline-block; padding: 0.2rem 0.7rem; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; border-radius: 2px; }
+        .approval-pending  { background: rgba(247,147,30,0.12); color: var(--accent); border: 1px solid rgba(247,147,30,0.4); }
+        .approval-approved { background: rgba(56,239,125,0.12); color: var(--success); border: 1px solid rgba(56,239,125,0.4); }
+        .approval-rejected { background: rgba(220,53,69,0.12); color: #dc3545; border: 1px solid rgba(220,53,69,0.4); }
+
+        .action-btn { background: var(--border); color: var(--text); border: none; padding: 0.45rem 0.7rem; margin: 0 0.1rem; cursor: pointer; transition: all 0.2s; font-size: 0.8rem; }
+        .action-btn:hover { background: var(--primary); color: white; }
+        .action-btn.btn-approve { background: rgba(56,239,125,0.1); color: var(--success); border: 1px solid rgba(56,239,125,0.35); }
+        .action-btn.btn-approve:hover { background: var(--success); color: var(--bg); }
+        .action-btn.btn-approved { background: rgba(56,239,125,0.05); color: var(--success); border: 1px solid rgba(56,239,125,0.2); cursor: default; }
+        .action-btn.btn-convert { background: rgba(102,126,234,0.12); color: #667eea; border: 1px solid rgba(102,126,234,0.4); }
+        .action-btn.btn-convert:hover { background: #667eea; color: white; }
+        .action-btn.btn-converted { background: rgba(255,107,53,0.08); color: var(--primary); border: 1px solid rgba(255,107,53,0.3); }
+        .action-btn.btn-converted:hover { background: var(--primary); color: white; }
+        .action-btn.btn-bill { background: rgba(245,158,11,0.12); color: #f59e0b; border: 1px solid rgba(245,158,11,0.4); }
+        .action-btn.btn-bill:hover { background: #f59e0b; color: #0a0a0a; }
+
+        /* MODAL */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 999; align-items: center; justify-content: center; padding: 1rem; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--card-bg); border: 2px solid var(--primary); width: 100%; max-width: 540px; animation: modalIn 0.3s ease; }
+        @keyframes modalIn { from { transform: translateY(-25px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-header { padding: 1.5rem 2rem; border-bottom: 2px solid var(--border); background: linear-gradient(135deg, rgba(255,107,53,0.12), rgba(247,147,30,0.12)); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 2px; color: var(--primary); }
+        .modal-close { background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer; transition: color 0.2s; }
+        .modal-close:hover { color: var(--primary); }
+        .modal-body { padding: 2rem; }
+        .modal-footer { padding: 1.2rem 2rem; border-top: 2px solid var(--border); display: flex; gap: 1rem; justify-content: flex-end; }
+        .form-group { margin-bottom: 1.2rem; }
+        .form-label { display: block; color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.4rem; }
+        .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+        .qt-banner { background: rgba(255,107,53,0.07); border-left: 3px solid var(--primary); padding: 0.8rem 1rem; margin-bottom: 1.5rem; font-size: 0.88rem; }
+        .qt-banner strong { color: var(--primary); }
+
+        .upload-area { border: 2px dashed var(--border); padding: 1.5rem; text-align: center; cursor: pointer; transition: all 0.3s; color: var(--text-muted); }
+        .upload-area:hover { border-color: var(--primary); background: rgba(255,107,53,0.04); color: var(--text); }
+        .upload-area.has-file { border-color: var(--success); background: rgba(56,239,125,0.05); color: var(--success); }
+        .upload-area i { font-size: 1.8rem; margin-bottom: 0.5rem; display: block; }
+        #proofFileInput { display: none; }
+
+        .approval-detail .detail-row { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
+        .approval-detail .detail-row:last-child { border-bottom: none; }
+        .detail-label { color: var(--text-muted); }
+        .detail-value { color: var(--success); font-weight: 600; }
+
+        /* TOAST */
+        .toast { position: fixed; bottom: 2rem; right: 2rem; z-index: 9999; padding: 1rem 2rem; font-weight: 700; font-size: 0.9rem; letter-spacing: 1px; animation: modalIn 0.3s ease; }
+
+        @media (max-width: 768px) { .filters { grid-template-columns: 1fr; } .form-row-2 { grid-template-columns: 1fr; } }
+
+        /* Unified Navigation Styles */
+        .nav-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .nav-btn {
+            display: inline-block;
+            padding: 0.6rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text, #e0e0e0) !important;
+            text-decoration: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            border-radius: 4px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, var(--primary, #ff6b35), var(--accent, #f7931e));
+            color: white !important;
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(135deg, var(--primary, #ff6b35), var(--accent, #f7931e));
+            color: white !important;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.2);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <div class="header-content">
+            <div class="page-title">
+                <div class="page-icon"><i class="fas fa-clipboard-list"></i></div>
+                <h1>Quotations</h1>
+            </div>
+            <div class="nav-buttons">
+                <a href="/" class="nav-btn" title="Home">Home</a>
+                <a href="/optimizer" class="nav-btn" title="Plywood Optimizer">Optimizer</a>
+                <a href="/quotations-list" class="nav-btn active" title="Quotations List">Quotations</a>
+                <a href="/sales-orders" class="nav-btn" title="Sales Orders">Sales Orders</a>
+                <a href="/bills" class="nav-btn" title="Bills List">Bills</a>
+                <a href="/inventory" class="nav-btn" title="Inventory Management">Inventory</a>
+                <a href="/suppliers" class="nav-btn" title="Supplier Management">Suppliers</a>
+                <a href="/purchase-orders" class="nav-btn" title="Purchase Orders">Purchase Orders</a>
+                <a href="/customers" class="nav-btn" title="Customer Management">Customers</a>
+                <a href="/barcode/print" class="nav-btn" title="Print Barcodes">Barcode Print</a>
+                <a href="/barcode/scan" class="nav-btn" title="Scan &amp; Update Stock">Barcode Scan</a>
+                <a href="/quotation" class="btn" style="padding:0.6rem 1rem;font-size:0.75rem;margin-left:0.5rem;border-radius:4px;"><i class="fas fa-plus"></i> New Quotation</a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main>
+<div class="container">
+
+    <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">📄</div><div class="stat-value" id="totalQuotations">0</div><div class="stat-label">Total</div></div>
+        <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-value" id="draftQuotations">0</div><div class="stat-label">Draft</div></div>
+        <div class="stat-card"><div class="stat-icon">📤</div><div class="stat-value" id="sentQuotations">0</div><div class="stat-label">Sent</div></div>
+        <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" id="acceptedQuotations">0</div><div class="stat-label">Approved</div></div>
+        <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value" id="totalValue">₹0</div><div class="stat-label">Approved Value</div></div>
+    </div>
+
+    <div class="content-card">
+        <div class="content-header">
+            <h2><i class="fas fa-list"></i> All Quotations</h2>
+        </div>
+        <div class="content-body">
+            <div class="filters">
+                <input type="text" class="form-control" id="searchInput" placeholder="🔍  Search by number or customer...">
+                <select class="form-select" id="statusFilter">
+                    <option value="">All Status</option>
+                    <option value="DRAFT">Draft</option>
+                    <option value="SENT">Sent</option>
+                    <option value="ACCEPTED">Accepted</option>
+                    <option value="REJECTED">Rejected</option>
+                    <option value="EXPIRED">Expired</option>
+                    <option value="CONVERTED">Converted</option>
+                </select>
+                <input type="date" class="form-control" id="dateFilter">
+                <button class="btn" onclick="filterQuotations()"><i class="fas fa-filter"></i> Filter</button>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Quotation #</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Amount</th>
+                            <th>Valid Until</th>
+                            <th>Status</th>
+                            <th>Approval</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="quotationTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+</main>
+
+<!-- ===== APPROVAL MODAL ===== -->
+<div class="modal-overlay" id="approvalModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>✅ Mark Customer Approval</h3>
+            <button class="modal-close" onclick="closeApprovalModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="qt-banner">
+                Quotation: <strong id="modal_qtNumber">-</strong> &nbsp;·&nbsp;
+                Customer: <strong id="modal_customerName">-</strong> &nbsp;·&nbsp;
+                Amount: <strong id="modal_amount">-</strong>
+            </div>
+
+            <div class="form-row-2">
+                <div class="form-group">
+                    <label class="form-label">How did customer approve? *</label>
+                    <select class="form-select" id="approvalMethod">
+                        <option value="WHATSAPP">📱 WhatsApp</option>
+                        <option value="CALL">📞 Phone Call</option>
+                        <option value="EMAIL">📧 Email</option>
+                        <option value="PAPER">📄 Signed Paper</option>
+                        <option value="IN_PERSON">🤝 In Person</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Approval Date *</label>
+                    <input type="date" class="form-control" id="approvalDate">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Approved By *</label>
+                <input type="text" class="form-control" id="approvedBy" placeholder="Customer name who approved">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Remarks</label>
+                <input type="text" class="form-control" id="approvalRemarks" placeholder="e.g. Customer confirmed via WhatsApp at 3pm">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Upload Proof (Screenshot / Photo of signed paper)</label>
+                <div class="upload-area" id="uploadArea" onclick="document.getElementById('proofFileInput').click()">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <div id="uploadText">Click to upload WhatsApp screenshot or photo</div>
+                    <small style="color:var(--text-muted);font-size:0.75rem;">JPG, PNG, PDF · Optional but recommended</small>
+                </div>
+                <input type="file" id="proofFileInput" accept="image/*,.pdf" onchange="handleFileSelect(event)">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeApprovalModal()">Cancel</button>
+            <button class="btn btn-green" onclick="saveApproval()"><i class="fas fa-check"></i> Save Approval</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== VIEW APPROVAL MODAL ===== -->
+<div class="modal-overlay" id="viewApprovalModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>✅ Approval Details</h3>
+            <button class="modal-close" onclick="document.getElementById('viewApprovalModal').classList.remove('active')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="approval-detail" id="approvalDetailContent"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="document.getElementById('viewApprovalModal').classList.remove('active')">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let quotations = [];
+    let currentQuotationId = null;
+    let selectedProofFile = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadQuotations();
+        loadStatistics();
+        document.getElementById('approvalDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('searchInput').addEventListener('keyup', filterQuotations);
+        document.getElementById('statusFilter').addEventListener('change', filterQuotations);
+        document.getElementById('dateFilter').addEventListener('change', filterQuotations);
+    });
+
+    function loadQuotations() {
+        fetch('/api/quotations')
+            .then(r => r.json())
+            .then(data => { quotations = data; displayQuotations(data); })
+            .catch(e => console.error(e));
+    }
+
+    function loadStatistics() {
+        fetch('/api/quotations/statistics')
+            .then(r => r.json())
+            .then(s => {
+                document.getElementById('totalQuotations').textContent    = s.totalQuotations || 0;
+                document.getElementById('draftQuotations').textContent    = s.draftQuotations || 0;
+                document.getElementById('sentQuotations').textContent     = s.sentQuotations || 0;
+                document.getElementById('acceptedQuotations').textContent = s.acceptedQuotations || 0;
+                document.getElementById('totalValue').textContent         = '₹' + (s.totalAcceptedValue || 0).toLocaleString('en-IN');
+            })
+            .catch(e => console.error(e));
+    }
+
+    function displayQuotations(data) {
+        const tbody = document.getElementById('quotationTableBody');
+        tbody.innerHTML = '';
+
+        if (!data.length) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:3rem;">No quotations found</td></tr>';
+            return;
+        }
+
+        data.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        data.forEach(q => {
+            const amount = q.items ? q.items.reduce((s, i) => s + ((i.quantity || 0) * (i.unitPrice || 0)), 0) : 0;
+            const statusClass = 'status-' + q.status.toLowerCase();
+
+            // Approval column HTML
+            let approvalHtml = '';
+            let approveActionBtn = '';
+
+            if (q.approvalStatus === 'APPROVED') {
+                approvalHtml = `
+                    <span class="approval-badge approval-approved">✓ Approved</span>
+                    <div style="font-size:0.75rem;color:var(--text-muted);margin-top:3px;">${q.approvedBy || ''}</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);">${q.approvalMethod || ''} · ${formatDate(q.approvedDate)}</div>`;
+                approveActionBtn = `
+                    <button class="action-btn btn-approved" title="Approved" disabled><i class="fas fa-check-double"></i></button>
+                    <button class="action-btn btn-approve" onclick="viewApproval(${q.id})" title="View Proof"><i class="fas fa-image"></i></button>`;
+            } else {
+                approvalHtml = `<span class="approval-badge approval-pending">⏳ Pending</span>`;
+                approveActionBtn = `<button class="action-btn btn-approve" onclick="openApprovalModal(${q.id})" title="Mark Approved"><i class="fas fa-thumbs-up"></i> Approve</button>`;
+            }
+
+            // Sales Order conversion button
+            const salesOrderBtn = buildSalesOrderBtn(q);
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${q.quotationNumber}</strong></td>
+                    <td>${formatDate(q.date)}</td>
+                    <td>${q.customerName || 'N/A'}</td>
+                    <td>₹${amount.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+                    <td>${q.validUntil ? formatDate(q.validUntil) : 'N/A'}</td>
+                    <td><span class="status-badge ${statusClass}">${q.status}</span></td>
+                    <td>${approvalHtml}</td>
+                    <td>
+                        ${approveActionBtn}
+                        ${salesOrderBtn}
+                        ${buildBillBtn(q)}
+                        <button class="action-btn" onclick="viewQuotation(${q.id})" title="View"><i class="fas fa-eye"></i></button>
+                        <button class="action-btn" onclick="downloadPDF(${q.id},'${q.quotationNumber}')" title="PDF"><i class="fas fa-file-pdf"></i></button>
+                        <button class="action-btn btn-whatsapp" onclick="sendWhatsApp(${q.id}, this)" title="Send WhatsApp" style="background: #25D366; color: white;"><i class="fab fa-whatsapp"></i> Send WhatsApp</button>
+                        <button class="action-btn" onclick="deleteQuotation(${q.id})" title="Delete"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`;
+        });
+    }
+
+    /**
+     * Returns a "Create Bill" anchor for APPROVED quotations.
+     * Navigates to /bill?from=QT-XXXX which prefills the bill form.
+     */
+    function buildBillBtn(q) {
+        if (q.approvalStatus === 'APPROVED') {
+            return `<a href="/bill?from=${encodeURIComponent(q.quotationNumber)}" class="action-btn btn-bill" title="Create Invoice from this Quotation">&#128196; Create Bill</a>`;
+        }
+        return '';
+    }
+
+    /**
+     * Returns the appropriate Sales Order action button HTML for a quotation row.
+     * - Approved + not yet converted → "📦 Create Order" button
+     * - Already converted           → "📦 View Order" link
+     * - Otherwise                   → empty string (no button)
+     */
+    function buildSalesOrderBtn(q) {
+        // Show 'Create Order' only when BOTH the approval AND the quotation status are ready.
+        // The backend (SalesOrderService) requires status == ACCEPTED; approvalStatus == APPROVED
+        // is set at the same time by the approve endpoint, but we guard both to avoid confusing errors.
+        if (q.approvalStatus === 'APPROVED' && q.status === 'ACCEPTED' && !q.convertedToOrder) {
+            return `<button class="action-btn btn-convert" onclick="convertToSalesOrder(${q.id})" title="Create Sales Order"><i class="fas fa-box"></i> Create Order</button>`;
+        }
+        if (q.convertedToOrder && q.salesOrderId) {
+            return `<a href="/sales-orders" class="action-btn btn-converted" title="View Sales Order"><i class="fas fa-box-open"></i> View Order</a>`;
+        }
+        return '';
+    }
+
+    function filterQuotations() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const status = document.getElementById('statusFilter').value;
+        const date   = document.getElementById('dateFilter').value;
+        displayQuotations(quotations.filter(q =>
+            (q.quotationNumber.toLowerCase().includes(search) || (q.customerName || '').toLowerCase().includes(search)) &&
+            (!status || q.status === status) &&
+            (!date   || q.date === date)
+        ));
+    }
+
+    // ===== APPROVAL =====
+
+    function openApprovalModal(id) {
+        const q = quotations.find(x => x.id === id);
+        if (!q) return;
+        currentQuotationId = id;
+        selectedProofFile  = null;
+
+        const amount = q.items ? q.items.reduce((s, i) => s + ((i.quantity||0)*(i.unitPrice||0)), 0) : 0;
+        document.getElementById('modal_qtNumber').textContent     = q.quotationNumber;
+        document.getElementById('modal_customerName').textContent = q.customerName || 'N/A';
+        document.getElementById('modal_amount').textContent       = '₹' + amount.toLocaleString('en-IN', {minimumFractionDigits:2});
+        document.getElementById('approvedBy').value               = q.customerName || '';
+        document.getElementById('approvalRemarks').value          = '';
+        document.getElementById('approvalMethod').value           = 'WHATSAPP';
+        document.getElementById('approvalDate').value             = new Date().toISOString().split('T')[0];
+        document.getElementById('uploadArea').className           = 'upload-area';
+        document.getElementById('uploadText').textContent         = 'Click to upload WhatsApp screenshot or photo';
+
+        document.getElementById('approvalModal').classList.add('active');
+    }
+
+    function closeApprovalModal() {
+        document.getElementById('approvalModal').classList.remove('active');
+        currentQuotationId = null;
+        selectedProofFile  = null;
+    }
+
+    function handleFileSelect(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        selectedProofFile = file;
+        document.getElementById('uploadArea').className = 'upload-area has-file';
+        document.getElementById('uploadText').innerHTML = `<i class="fas fa-check-circle"></i> ${file.name}`;
+    }
+
+    function saveApproval() {
+        const approvedBy = document.getElementById('approvedBy').value.trim();
+        if (!approvedBy) { showToast('Please enter who approved!', 'error'); return; }
+
+        const formData = new FormData();
+        formData.append('approvedBy',      approvedBy);
+        formData.append('approvalMethod',  document.getElementById('approvalMethod').value);
+        formData.append('approvedDate',    document.getElementById('approvalDate').value);
+        formData.append('approvalRemarks', document.getElementById('approvalRemarks').value);
+        if (selectedProofFile) formData.append('proofImage', selectedProofFile);
+
+        fetch(`/api/quotations/${currentQuotationId}/approve`, { method: 'POST', body: formData })
+            .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+            .then(() => {
+                closeApprovalModal();
+                loadQuotations();
+                loadStatistics();
+                showToast('✅ Approval saved successfully!', 'success');
+            })
+            .catch(() => showToast('✗ Error saving approval', 'error'));
+    }
+
+    function viewApproval(id) {
+        const q = quotations.find(x => x.id === id);
+        if (!q) return;
+        document.getElementById('approvalDetailContent').innerHTML = `
+            <div class="detail-row"><span class="detail-label">Approved By</span><span class="detail-value">${q.approvedBy || '-'}</span></div>
+            <div class="detail-row"><span class="detail-label">Date</span><span class="detail-value">${formatDate(q.approvedDate)}</span></div>
+            <div class="detail-row"><span class="detail-label">Method</span><span class="detail-value">${q.approvalMethod || '-'}</span></div>
+            <div class="detail-row"><span class="detail-label">Remarks</span><span class="detail-value">${q.approvalRemarks || '-'}</span></div>
+            <div class="detail-row"><span class="detail-label">Proof</span><span class="detail-value">${q.approvalImagePath
+                ? `<a href="/uploads/${q.approvalImagePath}" target="_blank" style="color:var(--success)"><i class="fas fa-image"></i> View Image</a>`
+                : 'Not uploaded'}</span></div>`;
+        document.getElementById('viewApprovalModal').classList.add('active');
+    }
+
+    // ===== SALES ORDER CONVERSION =====
+
+    async function convertToSalesOrder(quotationId) {
+        if (!confirm('Convert this approved quotation to a Sales Order?')) return;
+
+        try {
+            const response = await fetch(`/api/sales-orders/from-quotation/${quotationId}`, {
+                method: 'POST'
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                showToast(`✗ ${error.error || 'Failed to create sales order'}`, 'error');
+                return;
+            }
+
+            const salesOrder = await response.json();
+            showToast(`✅ Sales Order ${salesOrder.orderNumber} created!`, 'success');
+
+            // Reload quotations to reflect updated convertedToOrder / salesOrderId fields
+            loadQuotations();
+            loadStatistics();
+
+            // Ask if user wants to navigate to sales orders page
+            if (confirm(`Sales Order ${salesOrder.orderNumber} created successfully!\n\nGo to Sales Orders page?`)) {
+                window.location.href = '/sales-orders';
+            }
+        } catch (error) {
+            console.error('Error converting to sales order:', error);
+            showToast('✗ Failed to create sales order. Please try again.', 'error');
+        }
+    }
+
+    // ===== OTHER ACTIONS =====
+
+    function viewQuotation(id) {
+        const q = quotations.find(x => x.id === id);
+        if (!q) return;
+        const amount = q.items ? q.items.reduce((s, i) => s + ((i.quantity||0)*(i.unitPrice||0)), 0) : 0;
+        const tax    = amount * ((q.taxRate ||0)/100);
+        const disc   = amount * ((q.discount||0)/100);
+        alert(`QUOTATION: ${q.quotationNumber}\nCustomer: ${q.customerName}\nDate: ${formatDate(q.date)}\nStatus: ${q.status}\nApproval: ${q.approvalStatus||'PENDING'}\n\nSubtotal: ₹${amount.toFixed(2)}\nTax: ₹${tax.toFixed(2)}\nDiscount: -₹${disc.toFixed(2)}\nGrand Total: ₹${(amount+tax-disc).toFixed(2)}`);
+    }
+
+    function downloadPDF(id, number) {
+        fetch(`/api/quotations/${id}/pdf`)
+            .then(r => { if (!r.ok) throw new Error(); return r.blob(); })
+            .then(blob => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `quotation-${number}.pdf`; a.click(); })
+            .catch(() => alert('✗ Error generating PDF'));
+    }
+
+    function deleteQuotation(id) {
+        if (!confirm('⚠ Delete this quotation?')) return;
+        fetch(`/api/quotations/${id}`, { method: 'DELETE' })
+            .then(() => { loadQuotations(); loadStatistics(); showToast('Quotation deleted', 'success'); })
+            .catch(() => alert('✗ Error deleting'));
+    }
+
+    function showToast(msg, type) {
+        const t = document.createElement('div');
+        t.className = 'toast';
+        t.textContent = msg;
+        t.style.background = type === 'success' ? '#38ef7d' : '#ff6b35';
+        t.style.color = type === 'success' ? '#0a0a0a' : 'white';
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 3000);
+    }
+
+    function formatDate(d) {
+        if (!d) return 'N/A';
+        return new Date(d).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+    }
+
+    function sendWhatsApp(id, btn) {
+        const originalText = btn.innerHTML;
+        btn.innerText = 'Sending...';
+        btn.disabled = true;
+        
+        fetch(`/api/quotations/${id}/send-whatsapp`, {
+            method: 'POST'
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Quotation sent on WhatsApp successfully!');
+            } else {
+                alert('Failed to send. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to send. Please try again.');
+        })
+        .finally(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    }
+</script>
+</body>
+</html>

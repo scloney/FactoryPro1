@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plywood Optimizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            margin-bottom: 5px;
+        }
+        
+        .back-btn {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            text-decoration: none;
+            margin-bottom: 10px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        table th, table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .checkbox-group input {
+            width: auto;
+        }
+        
+        .results {
+            display: none;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .sheet-visualization {
+            border: 2px solid #333;
+            background: #fff;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .rectangle {
+            position: absolute;
+            border: 1px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            overflow: hidden;
+        }
+        
+        .sheet-title {
+            background: #667eea;
+            color: white;
+            padding: 10px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/" class="back-btn">← Back to Home</a>
+        <h1>📐 Plywood Optimizer</h1>
+        <p>MaxRect Algorithm for Optimal Cutting</p>
+    </div>
+    
+    <div class="container">
+        <div class="card">
+            <h2>Sheet Dimensions</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Sheet Width (mm)</label>
+                    <input type="number" id="sheetWidth" value="2440" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label>Sheet Height (mm)</label>
+                    <input type="number" id="sheetHeight" value="1220" step="0.1">
+                </div>
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="allowRotation" checked>
+                    <label for="allowRotation">Allow Rotation</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Rectangles to Cut</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Width (mm)</label>
+                    <input type="number" id="rectWidth" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label>Height (mm)</label>
+                    <input type="number" id="rectHeight" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label>Quantity</label>
+                    <input type="number" id="rectQuantity" value="1" min="1">
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-success" onclick="addRectangle()">+ Add Rectangle</button>
+                </div>
+            </div>
+            
+            <table id="rectanglesTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Width (mm)</th>
+                        <th>Height (mm)</th>
+                        <th>Quantity</th>
+                        <th>Total Area (sq mm)</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="rectanglesBody"></tbody>
+            </table>
+            
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <button class="btn btn-primary" onclick="optimize()">🚀 Optimize</button>
+                <button class="btn btn-secondary" onclick="clearAll()">Clear All</button>
+            </div>
+        </div>
+        
+        <div class="card results" id="results">
+            <h2>Optimization Results</h2>
+            <div class="stats-grid" id="statsGrid"></div>
+            <button class="btn btn-primary" onclick="downloadPdf()">📥 Download PDF Report</button>
+            <div id="sheetsVisualization"></div>
+        </div>
+    </div>
+    
+    <script>
+        let rectangles = [];
+        let optimizationResult = null;
+        const colors = ['#64B5F6', '#90EE90', '#FFB6C1', '#FFD700', '#D8BFD8', '#FFA07A', '#87CEEB', '#F08080'];
+        
+        function addRectangle() {
+            const width = parseFloat(document.getElementById('rectWidth').value);
+            const height = parseFloat(document.getElementById('rectHeight').value);
+            const quantity = parseInt(document.getElementById('rectQuantity').value);
+            
+            if (!width || !height || !quantity) {
+                alert('Please fill in all rectangle fields');
+                return;
+            }
+            
+            rectangles.push({ width, height, quantity });
+            updateRectanglesTable();
+            
+            // Clear inputs
+            document.getElementById('rectWidth').value = '';
+            document.getElementById('rectHeight').value = '';
+            document.getElementById('rectQuantity').value = '1';
+        }
+        
+        function updateRectanglesTable() {
+            const tbody = document.getElementById('rectanglesBody');
+            tbody.innerHTML = '';
+            
+            rectangles.forEach((rect, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${rect.width}</td>
+                    <td>${rect.height}</td>
+                    <td>${rect.quantity}</td>
+                    <td>${(rect.width * rect.height * rect.quantity).toFixed(2)}</td>
+                    <td><button class="btn btn-danger" onclick="removeRectangle(${index})">Remove</button></td>
+                `;
+            });
+        }
+        
+        function removeRectangle(index) {
+            rectangles.splice(index, 1);
+            updateRectanglesTable();
+        }
+        
+        function clearAll() {
+            rectangles = [];
+            updateRectanglesTable();
+            document.getElementById('results').style.display = 'none';
+        }
+        
+        async function optimize() {
+            if (rectangles.length === 0) {
+                alert('Please add at least one rectangle');
+                return;
+            }
+            
+            const request = {
+                sheetWidth: parseFloat(document.getElementById('sheetWidth').value),
+                sheetHeight: parseFloat(document.getElementById('sheetHeight').value),
+                rectangles: rectangles,
+                allowRotation: document.getElementById('allowRotation').checked
+            };
+            
+            try {
+                const response = await fetch('/optimizer/optimize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(request)
+                });
+                
+                optimizationResult = await response.json();
+                displayResults(optimizationResult, request.sheetWidth, request.sheetHeight);
+            } catch (error) {
+                alert('Optimization failed: ' + error.message);
+            }
+        }
+        
+        function displayResults(result, sheetWidth, sheetHeight) {
+            const statsGrid = document.getElementById('statsGrid');
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${result.totalSheets}</div>
+                    <div class="stat-label">Total Sheets</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${result.averageUtilization.toFixed(1)}%</div>
+                    <div class="stat-label">Avg Utilization</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${(result.usedArea / 1000000).toFixed(2)}</div>
+                    <div class="stat-label">Used Area (sq m)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${(result.wasteArea / 1000000).toFixed(2)}</div>
+                    <div class="stat-label">Waste Area (sq m)</div>
+                </div>
+            `;
+            
+            const visualization = document.getElementById('sheetsVisualization');
+            visualization.innerHTML = '';
+            
+            result.sheets.forEach(sheet => {
+                const sheetDiv = document.createElement('div');
+                sheetDiv.style.marginBottom = '30px';
+                
+                const title = document.createElement('div');
+                title.className = 'sheet-title';
+                title.textContent = `Sheet ${sheet.sheetNumber} - ${sheet.placedRectangles.length} pieces - ${sheet.utilization.toFixed(1)}% utilized`;
+                sheetDiv.appendChild(title);
+                
+                const scale = 500 / Math.max(sheetWidth, sheetHeight);
+                const visualWidth = sheetWidth * scale;
+                const visualHeight = sheetHeight * scale;
+                
+                const canvas = document.createElement('div');
+                canvas.className = 'sheet-visualization';
+                canvas.style.width = visualWidth + 'px';
+                canvas.style.height = visualHeight + 'px';
+                
+                sheet.placedRectangles.forEach((rect, index) => {
+                    const rectDiv = document.createElement('div');
+                    rectDiv.className = 'rectangle';
+                    
+                    const width = rect.rotated ? rect.height : rect.width;
+                    const height = rect.rotated ? rect.width : rect.height;
+                    
+                    rectDiv.style.left = (rect.x * scale) + 'px';
+                    rectDiv.style.top = (rect.y * scale) + 'px';
+                    rectDiv.style.width = (width * scale) + 'px';
+                    rectDiv.style.height = (height * scale) + 'px';
+                    rectDiv.style.backgroundColor = colors[index % colors.length];
+                    
+                    const label = `${rect.width.toFixed(0)}×${rect.height.toFixed(0)}${rect.rotated ? ' (R)' : ''}`;
+                    rectDiv.textContent = label;
+                    
+                    canvas.appendChild(rectDiv);
+                });
+                
+                sheetDiv.appendChild(canvas);
+                visualization.appendChild(sheetDiv);
+            });
+            
+            document.getElementById('results').style.display = 'block';
+        }
+        
+        async function downloadPdf() {
+            if (!optimizationResult) {
+                alert('No optimization results available');
+                return;
+            }
+            
+            const request = {
+                result: optimizationResult,
+                sheetWidth: parseFloat(document.getElementById('sheetWidth').value),
+                sheetHeight: parseFloat(document.getElementById('sheetHeight').value)
+            };
+            
+            try {
+                const response = await fetch('/optimizer/download-pdf', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(request)
+                });
+                
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'plywood-optimization.pdf';
+                a.click();
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                alert('PDF generation failed: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

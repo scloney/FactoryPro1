@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Management | Factory Pro Tools</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff6b35;
+            --secondary: #1a1a1a;
+            --accent: #f7931e;
+            --bg: #0a0a0a;
+            --card-bg: #1a1a1a;
+            --text: #e0e0e0;
+            --text-muted: #888;
+            --border: #333;
+            --success: #38ef7d;
+            --warning: #f7931e;
+            --danger: #ff6b35;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Work Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Background Pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 107, 53, 0.03) 2px, rgba(255, 107, 53, 0.03) 4px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255, 107, 53, 0.03) 2px, rgba(255, 107, 53, 0.03) 4px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        header {
+            padding: 1.5rem 0;
+            border-bottom: 2px solid var(--border);
+            background: rgba(26, 26, 26, 0.95);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .page-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+        }
+
+        .page-title h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            padding: 0.8rem 2rem;
+            text-decoration: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(255, 107, 53, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--text-muted);
+            box-shadow: 0 5px 20px rgba(136, 136, 136, 0.3);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 107, 53, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .stat-card:hover::before {
+            left: 100%;
+        }
+
+        .stat-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+        }
+
+        .stat-value {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+            color: var(--primary);
+            margin: 0.5rem 0;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        /* Content Card */
+        .content-card {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            margin-bottom: 2rem;
+        }
+
+        .content-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .content-header h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8rem;
+            letter-spacing: 2px;
+            color: var(--primary);
+        }
+
+        .content-body {
+            padding: 2rem;
+        }
+
+        /* Filters */
+        .filters {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr auto;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-control, .form-select {
+            background: var(--bg);
+            border: 2px solid var(--border);
+            color: var(--text);
+            padding: 0.8rem 1rem;
+            font-family: 'Work Sans', sans-serif;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+        }
+
+        .form-control::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Table */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--bg);
+        }
+
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            color: var(--primary);
+            border-bottom: 2px solid var(--border);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tbody tr {
+            transition: all 0.3s;
+        }
+
+        tbody tr:hover {
+            background: rgba(255, 107, 53, 0.05);
+        }
+
+        .customer-type-badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 0;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            clip-path: polygon(5% 0%, 95% 0%, 100% 50%, 95% 100%, 5% 100%, 0% 50%);
+        }
+
+        .type-retail { background: #667eea; color: white; }
+        .type-wholesale { background: #764ba2; color: white; }
+        .type-distributor { background: #11998e; color: white; }
+        .type-direct { background: #f7931e; color: white; }
+
+        .badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .bg-success { background: var(--success); color: var(--bg); }
+        .bg-warning { background: var(--warning); color: var(--bg); }
+        .bg-secondary { background: var(--text-muted); color: var(--bg); }
+
+        .action-btn {
+            background: var(--border);
+            color: var(--text);
+            border: none;
+            padding: 0.5rem 0.8rem;
+            margin: 0 0.2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .action-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            margin: 2rem;
+        }
+
+        .modal-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.1), rgba(247, 147, 30, 0.1));
+        }
+
+        .modal-header h3 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            letter-spacing: 2px;
+            color: var(--primary);
+        }
+
+        .btn-close {
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-close:hover {
+            color: var(--primary);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem 2rem;
+            border-top: 2px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.3rem;
+            letter-spacing: 2px;
+            color: var(--accent);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        @media (max-width: 768px) {
+            .filters {
+                grid-template-columns: 1fr;
+            }
+
+            .table-wrapper {
+                font-size: 0.85rem;
+            }
+
+            th, td {
+                padding: 0.5rem;
+            }
+        }
+
+        /* Unified Navigation Styles */
+        .nav-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .nav-btn {
+            display: inline-block;
+            padding: 0.6rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text, #e0e0e0) !important;
+            text-decoration: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            border-radius: 4px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, var(--primary, #ff6b35), var(--accent, #f7931e));
+            color: white !important;
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(135deg, var(--primary, #ff6b35), var(--accent, #f7931e));
+            color: white !important;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.2);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="page-title">
+                    <div class="page-icon"><i class="fas fa-users"></i></div>
+                    <h1>Customer Management</h1>
+                </div>
+                <div class="nav-buttons">
+                    <a href="/" class="nav-btn" title="Home">Home</a>
+                    <a href="/optimizer" class="nav-btn" title="Plywood Optimizer">Optimizer</a>
+                    <a href="/quotations-list" class="nav-btn" title="Quotations List">Quotations</a>
+                    <a href="/sales-orders" class="nav-btn" title="Sales Orders">Sales Orders</a>
+                    <a href="/bills" class="nav-btn" title="Bills List">Bills</a>
+                    <a href="/inventory" class="nav-btn" title="Inventory Management">Inventory</a>
+                    <a href="/suppliers" class="nav-btn" title="Supplier Management">Suppliers</a>
+                    <a href="/purchase-orders" class="nav-btn" title="Purchase Orders">Purchase Orders</a>
+                    <a href="/customers" class="nav-btn active" title="Customer Management">Customers</a>
+                    <a href="/barcode/print" class="nav-btn" title="Print Barcodes">Barcode Print</a>
+                    <a href="/barcode/scan" class="nav-btn" title="Scan &amp; Update Stock">Barcode Scan</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <!-- Statistics -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-value" id="totalCustomers">0</div>
+                    <div class="stat-label">Total Customers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-value" id="activeCustomers">0</div>
+                    <div class="stat-label">Active Customers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-value" id="totalOutstanding">₹0</div>
+                    <div class="stat-label">Total Outstanding</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-value" id="totalSales">₹0</div>
+                    <div class="stat-label">Total Sales</div>
+                </div>
+            </div>
+
+            <!-- Customer List -->
+            <div class="content-card">
+                <div class="content-header">
+                    <h2><i class="fas fa-list me-2"></i>Customer Directory</h2>
+                    <button class="btn" onclick="openAddCustomerModal()">
+                        <i class="fas fa-plus me-2"></i>Add Customer
+                    </button>
+                </div>
+                <div class="content-body">
+                    <!-- Filters -->
+                    <div class="filters">
+                        <input type="text" class="form-control" id="searchInput" placeholder="🔍 SEARCH CUSTOMERS...">
+                        <select class="form-select" id="statusFilter">
+                            <option value="">All Status</option>
+                            <option value="true">Active</option>
+                            <option value="false">Inactive</option>
+                        </select>
+                        <select class="form-select" id="typeFilter">
+                            <option value="">All Types</option>
+                            <option value="Retail">Retail</option>
+                            <option value="Wholesale">Wholesale</option>
+                            <option value="Distributor">Distributor</option>
+                            <option value="Direct">Direct</option>
+                        </select>
+                        <select class="form-select" id="paymentFilter">
+                            <option value="">All Payments</option>
+                            <option value="paid">Paid</option>
+                            <option value="pending">Pending</option>
+                        </select>
+                        <button class="btn" onclick="filterCustomers()">
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                    </div>
+
+                    <!-- Table -->
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Customer</th>
+                                    <th>Contact</th>
+                                    <th>Type</th>
+                                    <th>City</th>
+                                    <th>Outstanding</th>
+                                    <th>Orders</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customerTableBody">
+                                <!-- Dynamic content -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Customer Modal -->
+    <div class="modal" id="customerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Add New Customer</h3>
+                <button class="btn-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="customerForm">
+                    <input type="hidden" id="customerId">
+                    
+                    <!-- Basic Info -->
+                    <div class="form-section">
+                        <div class="section-title">Basic Information</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Customer Name *</label>
+                                <input type="text" class="form-control" id="customerName" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Contact Person</label>
+                                <input type="text" class="form-control" id="contactPerson">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Phone *</label>
+                                <input type="tel" class="form-control" id="phone" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">WhatsApp Number</label>
+                                <input type="tel" class="form-control" id="customerPhone" placeholder="91XXXXXXXXXX">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Address -->
+                    <div class="form-section">
+                        <div class="section-title">Address Details</div>
+                        <div class="form-group">
+                            <label class="form-label">Address</label>
+                            <textarea class="form-control" id="address"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">City</label>
+                                <input type="text" class="form-control" id="city">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">State</label>
+                                <input type="text" class="form-control" id="state">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Pincode</label>
+                                <input type="text" class="form-control" id="pincode">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Business Details -->
+                    <div class="form-section">
+                        <div class="section-title">Business Details</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">GSTIN</label>
+                                <input type="text" class="form-control" id="gstin" maxlength="15">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">PAN</label>
+                                <input type="text" class="form-control" id="pan" maxlength="10">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Customer Type *</label>
+                                <select class="form-select" id="customerType" required>
+                                    <option value="Retail">Retail</option>
+                                    <option value="Wholesale">Wholesale</option>
+                                    <option value="Distributor">Distributor</option>
+                                    <option value="Direct">Direct</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Payment Terms</label>
+                                <select class="form-select" id="paymentTerms">
+                                    <option>Cash</option>
+                                    <option>Credit</option>
+                                    <option>Advance</option>
+                                    <option>PDC</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" id="active">
+                                    <option value="true">Active</option>
+                                    <option value="false">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" id="notes"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn" onclick="saveCustomer()">
+                    <i class="fas fa-save me-2"></i>Save Customer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let customers = [];
+        let customerModal = document.getElementById('customerModal');
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCustomers();
+            document.getElementById('searchInput').addEventListener('keyup', filterCustomers);
+            document.getElementById('statusFilter').addEventListener('change', filterCustomers);
+            document.getElementById('typeFilter').addEventListener('change', filterCustomers);
+            document.getElementById('paymentFilter').addEventListener('change', filterCustomers);
+        });
+
+        function loadCustomers() {
+            fetch('/api/customers')
+                .then(response => response.json())
+                .then(data => {
+                    customers = data;
+                    displayCustomers(data);
+                    updateStatistics(data);
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function displayCustomers(data) {
+            const tbody = document.getElementById('customerTableBody');
+            tbody.innerHTML = '';
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">No customers found</td></tr>';
+                return;
+            }
+
+            data.forEach(customer => {
+                const typeClass = `type-${customer.customerType.toLowerCase()}`;
+                const paymentBadge = customer.outstandingBalance === 0 ? 
+                    '<span class="badge bg-success">PAID</span>' : 
+                    '<span class="badge bg-warning">PENDING</span>';
+                
+                const row = `
+                    <tr>
+                        <td><strong>${customer.customerName}</strong></td>
+                        <td>
+                            <i class="fas fa-phone" style="color: var(--text-muted);"></i> ${customer.phone}<br>
+                            ${customer.customerPhone ? `<i class="fab fa-whatsapp" style="color: #25D366;"></i> ${customer.customerPhone}<br>` : ''}
+                            <small style="color: var(--text-muted);">${customer.email || 'N/A'}</small>
+                        </td>
+                        <td><span class="customer-type-badge ${typeClass}">${customer.customerType}</span></td>
+                        <td>${customer.city || 'N/A'}</td>
+                        <td>
+                            ₹${customer.outstandingBalance.toLocaleString('en-IN')}<br>
+                            ${paymentBadge}
+                        </td>
+                        <td>
+                            ${customer.totalOrders}<br>
+                            <small style="color: var(--text-muted);">₹${(customer.totalPurchaseValue || 0).toLocaleString('en-IN')}</small>
+                        </td>
+                        <td>
+                            <span class="badge ${customer.active ? 'bg-success' : 'bg-secondary'}">
+                                ${customer.active ? 'ACTIVE' : 'INACTIVE'}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="action-btn" onclick="viewCustomer(${customer.id})" title="View">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-btn" onclick="editCustomer(${customer.id})" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn" onclick="deleteCustomer(${customer.id})" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function updateStatistics(data) {
+            const active = data.filter(c => c.active).length;
+            const totalOutstanding = data.reduce((sum, c) => sum + c.outstandingBalance, 0);
+            const totalSales = data.reduce((sum, c) => sum + (c.totalPurchaseValue || 0), 0);
+
+            document.getElementById('totalCustomers').textContent = data.length;
+            document.getElementById('activeCustomers').textContent = active;
+            document.getElementById('totalOutstanding').textContent = '₹' + totalOutstanding.toLocaleString('en-IN');
+            document.getElementById('totalSales').textContent = '₹' + totalSales.toLocaleString('en-IN');
+        }
+
+        function filterCustomers() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const typeFilter = document.getElementById('typeFilter').value;
+            const paymentFilter = document.getElementById('paymentFilter').value;
+
+            let filtered = customers.filter(customer => {
+                const matchesSearch = 
+                    customer.customerName.toLowerCase().includes(searchTerm) ||
+                    customer.phone.includes(searchTerm) ||
+                    (customer.email && customer.email.toLowerCase().includes(searchTerm)) ||
+                    (customer.city && customer.city.toLowerCase().includes(searchTerm));
+
+                const matchesStatus = !statusFilter || customer.active.toString() === statusFilter;
+                const matchesType = !typeFilter || customer.customerType === typeFilter;
+                
+                let matchesPayment = true;
+                if (paymentFilter === 'paid') {
+                    matchesPayment = customer.outstandingBalance === 0;
+                } else if (paymentFilter === 'pending') {
+                    matchesPayment = customer.outstandingBalance > 0;
+                }
+
+                return matchesSearch && matchesStatus && matchesType && matchesPayment;
+            });
+
+            displayCustomers(filtered);
+        }
+
+        function openAddCustomerModal() {
+            document.getElementById('modalTitle').textContent = 'Add New Customer';
+            document.getElementById('customerForm').reset();
+            document.getElementById('customerId').value = '';
+            customerModal.classList.add('show');
+        }
+
+        function closeModal() {
+            customerModal.classList.remove('show');
+        }
+
+        function editCustomer(id) {
+            fetch(`/api/customers/${id}`)
+                .then(response => response.json())
+                .then(customer => {
+                    document.getElementById('modalTitle').textContent = 'Edit Customer';
+                    document.getElementById('customerId').value = customer.id;
+                    document.getElementById('customerName').value = customer.customerName;
+                    document.getElementById('contactPerson').value = customer.contactPerson || '';
+                    document.getElementById('phone').value = customer.phone;
+                    document.getElementById('customerPhone').value = customer.customerPhone || '';
+                    document.getElementById('email').value = customer.email || '';
+                    document.getElementById('address').value = customer.address || '';
+                    document.getElementById('city').value = customer.city || '';
+                    document.getElementById('state').value = customer.state || '';
+                    document.getElementById('pincode').value = customer.pincode || '';
+                    document.getElementById('gstin').value = customer.gstin || '';
+                    document.getElementById('pan').value = customer.pan || '';
+                    document.getElementById('customerType').value = customer.customerType;
+                    document.getElementById('paymentTerms').value = customer.paymentTerms;
+                    document.getElementById('notes').value = customer.notes || '';
+                    document.getElementById('active').value = customer.active.toString();
+                    customerModal.classList.add('show');
+                });
+        }
+
+        function viewCustomer(id) {
+            fetch(`/api/customers/${id}`)
+                .then(response => response.json())
+                .then(customer => {
+                    const details = `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CUSTOMER DETAILS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Customer: ${customer.customerName}
+Contact: ${customer.phone}
+WhatsApp: ${customer.customerPhone || 'N/A'}
+Email: ${customer.email || 'N/A'}
+Type: ${customer.customerType}
+City: ${customer.city || 'N/A'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FINANCIAL SUMMARY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Outstanding: ₹${customer.outstandingBalance.toLocaleString('en-IN')}
+Total Orders: ${customer.totalOrders}
+Total Sales: ₹${(customer.totalPurchaseValue || 0).toLocaleString('en-IN')}
+Last Order: ${customer.lastOrderDate || 'Never'}
+
+Status: ${customer.active ? 'ACTIVE' : 'INACTIVE'}
+                    `;
+                    alert(details);
+                });
+        }
+
+        function saveCustomer() {
+            const id = document.getElementById('customerId').value;
+            const customerData = {
+                customerName: document.getElementById('customerName').value,
+                contactPerson: document.getElementById('contactPerson').value,
+                phone: document.getElementById('phone').value,
+                customerPhone: document.getElementById('customerPhone').value,
+                email: document.getElementById('email').value,
+                address: document.getElementById('address').value,
+                city: document.getElementById('city').value,
+                state: document.getElementById('state').value,
+                pincode: document.getElementById('pincode').value,
+                gstin: document.getElementById('gstin').value,
+                pan: document.getElementById('pan').value,
+                customerType: document.getElementById('customerType').value,
+                paymentTerms: document.getElementById('paymentTerms').value,
+                notes: document.getElementById('notes').value,
+                active: document.getElementById('active').value === 'true'
+            };
+
+            const url = id ? `/api/customers/${id}` : '/api/customers';
+            const method = id ? 'PUT' : 'POST';
+
+            fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(customerData)
+            })
+            .then(response => response.json())
+            .then(() => {
+                closeModal();
+                loadCustomers();
+                alert('✓ Customer saved successfully!');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('✗ Error saving customer');
+            });
+        }
+
+        function deleteCustomer(id) {
+            if (confirm('⚠ Are you sure you want to delete this customer?')) {
+                fetch(`/api/customers/${id}`, { method: 'DELETE' })
+                    .then(() => {
+                        loadCustomers();
+                        alert('✓ Customer deleted successfully!');
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('✗ Error deleting customer');
+                    });
+            }
+        }
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            if (event.target == customerModal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
