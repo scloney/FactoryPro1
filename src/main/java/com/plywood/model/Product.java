@@ -47,6 +47,10 @@ public class Product {
     
     @Column(nullable = false)
     private double minStockLevel = 0.0;
+
+    /** Reorder point — when currentStock falls below this, a purchase order should be raised. */
+    @Column(nullable = false)
+    private double reorderLevel = 0.0;
     
     @Column(nullable = false)
     private double maxStockLevel = 0.0;
@@ -106,6 +110,18 @@ public class Product {
     @Transient
     public boolean isLowStock() {
         return currentStock <= minStockLevel;
+    }
+
+    /** True when stock has fallen to or below the reorder trigger point. */
+    @Transient
+    public boolean isReorderNeeded() {
+        return currentStock <= reorderLevel && reorderLevel > 0;
+    }
+
+    /** True when stock is zero (critical — production may halt). */
+    @Transient
+    public boolean isCriticalStock() {
+        return currentStock <= 0;
     }
     
     @Transient
@@ -170,6 +186,9 @@ public class Product {
     
     public double getMinStockLevel() { return minStockLevel; }
     public void setMinStockLevel(double minStockLevel) { this.minStockLevel = minStockLevel; }
+
+    public double getReorderLevel() { return reorderLevel; }
+    public void setReorderLevel(double reorderLevel) { this.reorderLevel = reorderLevel; }
     
     public double getMaxStockLevel() { return maxStockLevel; }
     public void setMaxStockLevel(double maxStockLevel) { this.maxStockLevel = maxStockLevel; }

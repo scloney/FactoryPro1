@@ -1,826 +1,911 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quotation Maker | PANDIT FURNITURE</title>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
+        /* ── Design tokens (dashboard-identical) ───────────────────────────── */
         :root {
-            --primary: #ff6b35;
-            --secondary: #1a1a1a;
-            --accent: #f7931e;
-            --bg: #0a0a0a;
-            --card-bg: #1a1a1a;
-            --text: #e0e0e0;
-            --text-muted: #888;
-            --border: #333;
-            --success: #38ef7d;
+            --primary:   #ff6b35;
+            --accent:    #f7931e;
+            --bg:        #0a0a0a;
+            --surface:   #141414;
+            --card:      #1a1a1a;
+            --card2:     #1f1f1f;
+            --border:    #2a2a2a;
+            --text:      #e0e0e0;
+            --muted:     #888;
+            --green:     #22c55e;
+            --red:       #ef4444;
+            --blue:      #3b82f6;
+            --yellow:    #eab308;
+            --radius:    6px;
         }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Work Sans', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.6;
-            overflow-x: hidden;
+            background: var(--bg); color: var(--text);
+            line-height: 1.6; overflow-x: hidden;
         }
-
         body::before {
-            content: '';
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+            content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
             background-image:
-                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,107,53,0.03) 2px, rgba(255,107,53,0.03) 4px),
-                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255,107,53,0.03) 2px, rgba(255,107,53,0.03) 4px);
-            pointer-events: none;
-            z-index: 0;
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,107,53,.025) 2px, rgba(255,107,53,.025) 4px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255,107,53,.025) 2px, rgba(255,107,53,.025) 4px);
         }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 2rem;
-            position: relative;
-            z-index: 1;
+        /* ── Top nav (dashboard-identical) ─────────────────────────────────── */
+        .topbar {
+            background: rgba(20,20,20,.96); border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 200;
+            padding: 0 2rem; height: 60px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .topbar-left { display: flex; align-items: center; gap: .75rem; }
+        .logo-hex {
+            width: 34px; height: 34px;
+            background: linear-gradient(135deg,var(--primary),var(--accent));
+            clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+            animation: spin 20s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .site-name {
+            font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 2px;
+            background: linear-gradient(90deg,var(--primary),var(--accent));
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .topbar-right { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+        .nav-link {
+            color: var(--muted); text-decoration: none; font-size: .82rem;
+            font-weight: 600; text-transform: uppercase; letter-spacing: .8px; transition: color .2s;
+        }
+        .nav-link:hover, .nav-link.active { color: var(--primary); }
+        .logout-btn {
+            background: none; border: 1px solid var(--border); color: var(--muted);
+            cursor: pointer; font-family: inherit; font-size: .82rem; font-weight: 600;
+            letter-spacing: .8px; text-transform: uppercase;
+            padding: .35rem .9rem; border-radius: var(--radius); transition: all .2s;
+        }
+        .logout-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* ── Page wrapper ───────────────────────────────────────────────────── */
+        .page { max-width: 1200px; margin: 0 auto; padding: 2rem; position: relative; z-index: 1; }
+
+        /* ── Page heading ───────────────────────────────────────────────────── */
+        .page-heading {
+            margin-bottom: 1.75rem;
+            display: flex; align-items: center; gap: 1rem;
+        }
+        .page-heading h1 {
+            font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; letter-spacing: 3px;
+            background: linear-gradient(90deg,var(--primary),var(--accent));
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .page-heading p { font-size: .85rem; color: var(--muted); margin-top: .2rem; }
+
+        /* ── Content card (main form container) ─────────────────────────────── */
+        .content-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: var(--radius); overflow: hidden;
+        }
+        .content-header {
+            padding: 1.1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .content-header h2 {
+            font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem;
+            letter-spacing: 2px; color: var(--text);
+            display: flex; align-items: center; gap: .6rem;
+        }
+        .content-header h2 i { color: var(--primary); }
+        .content-body { padding: 1.5rem; }
+
+        /* ── Form sections ──────────────────────────────────────────────────── */
+        .form-section {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1.25rem;
+        }
+        .section-title {
+            font-family: 'Bebas Neue', sans-serif; font-size: 1rem;
+            letter-spacing: 2px; color: var(--primary);
+            margin-bottom: 1rem; padding-bottom: .5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: .5rem;
+        }
+        .section-title::before {
+            content: ''; display: inline-block;
+            width: 3px; height: 1em;
+            background: linear-gradient(var(--primary), var(--accent));
+            border-radius: 2px;
+        }
+        .form-row {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem; margin-bottom: 1rem;
+        }
+        .form-row:last-child { margin-bottom: 0; }
+        .form-group { display: flex; flex-direction: column; gap: .3rem; }
+        .form-label {
+            font-size: .75rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: .6px; color: var(--muted);
+        }
+        .form-control, .form-select {
+            background: rgba(255,255,255,.04); border: 1px solid var(--border);
+            color: var(--text); font-family: 'Work Sans', sans-serif;
+            font-size: .88rem; border-radius: var(--radius);
+            padding: .5rem .75rem; transition: border-color .2s, background .2s; width: 100%;
+        }
+        .form-control:focus, .form-select:focus {
+            outline: none; border-color: var(--primary);
+            background: rgba(255,107,53,.05);
+        }
+        .form-control[readonly] {
+            background: rgba(255,107,53,.04); color: var(--primary);
+            border-color: rgba(255,107,53,.2); font-weight: 600;
+        }
+        textarea.form-control { resize: vertical; min-height: 70px; }
+        .form-select option { background: var(--card); }
+
+        /* ── Items section ──────────────────────────────────────────────────── */
+        .items-section { display: flex; flex-direction: column; gap: .75rem; }
+
+        .item-row {
+            background: var(--card2); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 1rem;
+            transition: border-color .2s;
+        }
+        .item-row:hover { border-color: rgba(255,107,53,.3); }
+
+        .item-header {
+            display: flex; align-items: center; gap: .75rem;
+            margin-bottom: .85rem; padding-bottom: .75rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .item-number {
+            font-family: 'Bebas Neue', sans-serif; font-size: .9rem;
+            letter-spacing: 1px; color: var(--primary);
+            background: rgba(255,107,53,.1); border: 1px solid rgba(255,107,53,.2);
+            padding: .2rem .6rem; border-radius: 20px;
         }
 
-        header {
-            padding: 1.5rem 0;
-            border-bottom: 2px solid var(--border);
-            background: rgba(26,26,26,0.95);
-            backdrop-filter: blur(10px);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+        /* ── Unit toggle (Sq Ft / Running Ft, ft / mm) ──────────────────────── */
+        .unit-toggle {
+            display: inline-flex; border: 1px solid var(--border);
+            border-radius: 20px; overflow: hidden; flex-shrink: 0;
+        }
+        .unit-btn {
+            padding: .2rem .6rem; font-size: .7rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: .4px;
+            background: transparent; border: none; color: var(--muted);
+            cursor: pointer; font-family: 'Work Sans', sans-serif;
+            transition: all .15s;
+        }
+        .unit-btn.active {
+            background: linear-gradient(135deg,var(--primary),var(--accent));
+            color: #fff;
+        }
+        .unit-btn:hover:not(.active) { color: var(--primary); }
+
+        /* ── Remove item button ─────────────────────────────────────────────── */
+        .btn-remove {
+            margin-left: auto; background: rgba(239,68,68,.1);
+            border: 1px solid rgba(239,68,68,.25); color: var(--red);
+            font-family: 'Work Sans', sans-serif; font-size: .75rem;
+            font-weight: 600; text-transform: uppercase; letter-spacing: .4px;
+            padding: .25rem .7rem; border-radius: var(--radius);
+            cursor: pointer; transition: all .2s;
+            display: inline-flex; align-items: center; gap: .3rem;
+        }
+        .btn-remove:hover { background: rgba(239,68,68,.2); border-color: var(--red); }
+
+        /* ── Size inputs grid ───────────────────────────────────────────────── */
+        .size-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: .75rem;
+        }
+        .auto-field .form-control { color: var(--primary); font-weight: 600; }
+
+        /* ── Autocomplete dropdown ──────────────────────────────────────────── */
+        .autocomplete-list {
+            position: absolute; top: 100%; left: 0; right: 0; z-index: 500;
+            background: var(--card); border: 1px solid var(--border);
+            border-top: none; border-radius: 0 0 var(--radius) var(--radius);
+            max-height: 200px; overflow-y: auto; display: none;
+        }
+        .ac-item {
+            padding: .5rem .75rem; font-size: .85rem; cursor: pointer;
+            transition: background .15s; border-bottom: 1px solid var(--border);
+        }
+        .ac-item:last-child { border-bottom: none; }
+        .ac-item:hover, .ac-item.ac-active { background: rgba(255,107,53,.1); color: var(--primary); }
+        .ac-item strong { color: var(--primary); }
+
+        /* ── Totals section ─────────────────────────────────────────────────── */
+        .totals-section {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+        .totals-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: .6rem 2rem; max-width: 420px; margin-left: auto; align-items: center;
+        }
+        .total-label {
+            font-size: .82rem; font-weight: 600; color: var(--muted);
+            text-transform: uppercase; letter-spacing: .5px; text-align: right;
+        }
+        .total-value {
+            font-size: .95rem; font-weight: 700; color: var(--text); text-align: right;
+        }
+        .grand-total-label { font-size: 1rem; color: var(--text); }
+        .grand-total {
+            font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem;
+            letter-spacing: 1px; color: var(--primary); text-align: right;
         }
 
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        /* ── Action buttons row ─────────────────────────────────────────────── */
+        .action-buttons {
+            display: flex; gap: .75rem; flex-wrap: wrap;
+            justify-content: flex-end; margin-top: 1.5rem;
+            padding-top: 1.25rem; border-top: 1px solid var(--border);
         }
 
-        .page-title {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .page-icon {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
-        }
-
-        .page-title h1 {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 2.5rem;
-            letter-spacing: 2px;
-            background: linear-gradient(90deg, var(--primary), var(--accent));
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        /* ── Unified Navigation ── */
-        .nav-buttons {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-            align-items: center;
-        }
-
-        .nav-btn {
-            display: inline-block;
-            padding: 0.6rem 1rem;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.15);
-            color: var(--text) !important;
-            text-decoration: none;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.5px;
-            border-radius: 4px;
-            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
-        }
-
-        .nav-btn:hover {
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            color: white !important;
-            border-color: transparent;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(255,107,53,0.3);
-        }
-
-        .nav-btn.active {
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            color: white !important;
-            border-color: transparent;
-            box-shadow: 0 4px 12px rgba(255,107,53,0.2);
-            pointer-events: none;
-        }
-
-        /* ── Buttons ── */
+        /* ── Unified button system ──────────────────────────────────────────── */
         .btn {
-            display: inline-block;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            color: white;
-            padding: 0.8rem 2rem;
-            text-decoration: none;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: all 0.3s;
-            border: none;
-            cursor: pointer;
-            font-size: 0.9rem;
+            display: inline-flex; align-items: center; gap: .4rem;
+            padding: .5rem 1.1rem; border-radius: var(--radius);
+            font-family: 'Work Sans', sans-serif; font-size: .82rem;
+            font-weight: 600; text-transform: uppercase; letter-spacing: .6px;
+            cursor: pointer; border: 1px solid transparent; transition: all .2s;
+            background: linear-gradient(135deg,var(--primary),var(--accent)); color: #fff;
+            text-decoration: none; white-space: nowrap;
         }
-        .btn:hover { transform: scale(1.05); box-shadow: 0 5px 20px rgba(255,107,53,0.4); }
-        .btn-secondary { background: var(--border); }
-        .btn-secondary:hover { background: var(--text-muted); box-shadow: 0 5px 20px rgba(136,136,136,0.3); }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(255,107,53,.35); }
+        .btn-secondary {
+            background: rgba(255,255,255,.05); color: var(--muted);
+            border-color: var(--border);
+        }
+        .btn-secondary:hover { border-color: var(--primary); color: var(--primary); box-shadow: none; transform: none; }
+        .btn-add-item {
+            background: rgba(34,197,94,.1); color: var(--green);
+            border: 1px solid rgba(34,197,94,.25);
+        }
+        .btn-add-item:hover { background: rgba(34,197,94,.2); border-color: var(--green); box-shadow: none; transform: none; }
 
-        /* ── Layout ── */
-        .content-card { background: var(--card-bg); border: 2px solid var(--border); margin: 3rem 0; }
-        .content-header { padding: 1.5rem 2rem; border-bottom: 2px solid var(--border); background: linear-gradient(135deg, rgba(255,107,53,0.1), rgba(247,147,30,0.1)); }
-        .content-header h2 { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: 2px; color: var(--primary); }
-        .content-body { padding: 2rem; }
-        .form-section { margin-bottom: 2rem; }
-        .section-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; letter-spacing: 2px; color: var(--accent); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
-        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
-        .form-group { display: flex; flex-direction: column; }
-        .form-label { color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem; }
-        .form-control, .form-select { background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 0.8rem 1rem; font-family: 'Work Sans', sans-serif; transition: all 0.3s; }
-        .form-control:focus, .form-select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,107,53,0.1); }
-        textarea.form-control { resize: vertical; min-height: 80px; }
-
-        .items-section { background: var(--bg); padding: 1.5rem; border: 2px solid var(--border); margin: 2rem 0; }
-        .item-row { background: var(--card-bg); border: 1px solid var(--border); padding: 1rem; margin-bottom: 1rem; position: relative; }
-        .item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
-        .item-number { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; color: var(--primary); letter-spacing: 1px; }
-        .btn-remove { background: var(--border); color: var(--text); border: none; padding: 0.5rem 1rem; cursor: pointer; transition: all 0.3s; }
-        .btn-remove:hover { background: #dc3545; color: white; }
-
-        .size-inputs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; align-items: end; }
-
-        .auto-field { position: relative; }
-        .auto-field::after { content: '⚡ AUTO'; position: absolute; top: -8px; right: 8px; font-size: 0.65rem; color: var(--accent); font-weight: 600; letter-spacing: 1px; }
-        .auto-field input { background: rgba(247,147,30,0.05); border-color: var(--accent); }
-
-        .totals-section { background: linear-gradient(135deg, rgba(255,107,53,0.05), rgba(247,147,30,0.05)); padding: 2rem; border: 2px solid var(--border); margin-top: 2rem; }
-        .totals-grid { display: grid; grid-template-columns: 1fr 200px; gap: 1rem; max-width: 600px; margin-left: auto; }
-        .total-label { text-align: right; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
-        .total-value { text-align: right; font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; letter-spacing: 1px; color: var(--text); }
-        .grand-total { font-size: 2rem !important; color: var(--primary) !important; border-top: 2px solid var(--border); padding-top: 1rem; }
-        .grand-total-label { border-top: 2px solid var(--border); padding-top: 1rem; color: var(--primary) !important; }
-
-        .action-buttons { display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem; }
+        /* ── Badges ─────────────────────────────────────────────────────────── */
+        .badge {
+            display: inline-block; padding: .15rem .5rem; border-radius: 20px;
+            font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+        }
+        .badge-red    { background: rgba(239,68,68,.15);  color: var(--red); }
+        .badge-orange { background: rgba(255,107,53,.15); color: var(--primary); }
 
         @media (max-width: 768px) {
-            .size-inputs { grid-template-columns: 1fr; }
-            .totals-grid { grid-template-columns: 1fr; }
+            .size-inputs { grid-template-columns: repeat(2, 1fr); }
+            .form-row { grid-template-columns: 1fr; }
+            .totals-grid { max-width: 100%; }
+            .action-buttons { justify-content: stretch; }
+            .action-buttons .btn { flex: 1; justify-content: center; }
+            .topbar-right { gap: .75rem; }
         }
-
-        /* ── Autocomplete ── */
-        .autocomplete-list { display: none; position: absolute; top: 100%; left: 0; right: 0; background: #2a2a2a; border: 1px solid var(--primary); border-top: none; border-radius: 0 0 6px 6px; max-height: 220px; overflow-y: auto; z-index: 9999; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
-        .ac-item { padding: 9px 14px; font-size: 0.9rem; color: var(--text); cursor: pointer; border-bottom: 1px solid #333; transition: background 0.15s; }
-        .ac-item:last-child { border-bottom: none; }
-        .ac-item:hover, .ac-item.ac-active { background: rgba(255,107,53,0.2); color: var(--primary); }
-        .ac-item strong { color: var(--primary); font-weight: 700; }
-
-        /* ── Unit toggle ── */
-        .unit-toggle { display: inline-flex; gap: 2px; }
-        .unit-btn { padding: 1px 7px; font-size: 11px; font-weight: 600; border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; border-radius: 3px; transition: all 0.15s; line-height: 1.6; }
-        .unit-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-        .unit-btn:hover:not(.active) { border-color: var(--primary); color: var(--primary); }
     </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="page-title">
-                    <div class="page-icon"><i class="fas fa-file-invoice-dollar"></i></div>
-                    <h1>Quotation Maker</h1>
-                </div>
-                <div class="nav-buttons">
-                    <a href="/" class="nav-btn" title="Home">Home</a>
-                    <a href="/optimizer" class="nav-btn" title="Plywood Optimizer">Optimizer</a>
-                    <a href="/quotations-list" class="nav-btn active" title="Quotations List">Quotations</a>
-                    <a href="/sales-orders" class="nav-btn" title="Sales Orders">Sales Orders</a>
-                    <a href="/bills" class="nav-btn" title="Bills List">Bills</a>
-                    <a href="/inventory" class="nav-btn" title="Inventory Management">Inventory</a>
-                    <a href="/suppliers" class="nav-btn" title="Supplier Management">Suppliers</a>
-                    <a href="/purchase-orders" class="nav-btn" title="Purchase Orders">Purchase Orders</a>
-                    <a href="/customers" class="nav-btn" title="Customer Management">Customers</a>
-                    <a href="/barcode/print" class="nav-btn" title="Print Barcodes">Barcode Print</a>
-                    <a href="/barcode/scan" class="nav-btn" title="Scan &amp; Update Stock">Barcode Scan</a>
-                </div>
+
+<header class="topbar">
+    <div class="topbar-left">
+        <div class="logo-hex"></div>
+        <span class="site-name">Factory Pro</span>
+    </div>
+    <div class="topbar-right">
+        <span style="color:var(--muted);font-size:.82rem;display:inline-flex;align-items:center;gap:.35rem;margin-right:.5rem;" sec:authorize="isAuthenticated()">
+            👤 <span sec:authentication="name" style="color:var(--primary);font-weight:600;text-transform:uppercase;"></span>
+            <span sec:authorize="hasRole('ADMIN')" class="badge badge-red" style="margin:0;padding:.15rem .45rem;">ADMIN</span>
+            <span sec:authorize="hasRole('STAFF')" class="badge badge-orange" style="margin:0;padding:.15rem .45rem;">STAFF</span>
+        </span>
+        <a href="/"                class="nav-link">Dashboard</a>
+        <a href="/inventory"       class="nav-link">Inventory</a>
+        <a href="/quotations-list" class="nav-link active">Quotations</a>
+        <a href="/bills"           class="nav-link">Bills</a>
+        <a href="/sales-orders"    class="nav-link">Orders</a>
+        <a href="/purchase-orders" class="nav-link">PO</a>
+        <a href="/customers"       class="nav-link">Customers</a>
+        <a href="/suppliers"       class="nav-link">Suppliers</a>
+        <a href="/optimizer"       class="nav-link">Optimizer</a>
+        <a href="/barcode/print"   class="nav-link">Barcodes</a>
+        <form th:action="@{/logout}" method="post" style="display:inline;">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            <button type="submit" class="logout-btn">⏻ Logout</button>
+        </form>
+    </div>
+</header>
+
+<main>
+    <div class="page">
+
+        <div class="page-heading">
+            <div>
+                <h1>📋 Quotation Maker</h1>
+                <p>Create and send quotations to customers</p>
             </div>
         </div>
-    </header>
 
-    <main>
-        <div class="container">
-            <div class="content-card">
-                <div class="content-header">
-                    <h2><i class="fas fa-file-invoice-dollar"></i> Create New Quotation</h2>
-                </div>
-                <div class="content-body">
-                    <form id="quotationForm">
-                        <!-- Quotation Details -->
-                        <div class="form-section">
-                            <div class="section-title">Quotation Details</div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">Quotation Number *</label>
-                                    <input type="text" class="form-control" id="quotationNumber" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Date *</label>
-                                    <input type="date" class="form-control" id="date" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Valid Until</label>
-                                    <input type="date" class="form-control" id="validUntil">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Customer Details -->
-                        <div class="form-section">
-                            <div class="section-title">Customer Details</div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">Select Customer</label>
-                                    <select class="form-select" id="customerSelect" onchange="loadCustomerDetails()">
-                                        <option value="">-- Select Customer --</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">Customer Name *</label>
-                                    <input type="text" class="form-control" id="customerName" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Phone</label>
-                                    <input type="tel" class="form-control" id="customerPhone">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="customerEmail">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Address</label>
-                                <textarea class="form-control" id="customerAddress"></textarea>
-                            </div>
-                        </div>
-
-                        <!-- Company Details -->
-                        <div class="form-section">
-                            <div class="section-title">Your Company Details</div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">Company Name</label>
-                                    <input type="text" class="form-control" id="companyName" value="PANDIT FURNITURE">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Phone</label>
-                                    <input type="tel" class="form-control" id="companyPhone">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="companyEmail">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Address</label>
-                                <textarea class="form-control" id="companyAddress"></textarea>
-                            </div>
-                        </div>
-
-                        <!-- Items Section -->
-                        <div class="form-section">
-                            <div class="section-title">Items</div>
-                            <div class="items-section" id="itemsContainer"></div>
-                            <div style="margin-top:1rem;text-align:center;">
-                                <button type="button" class="btn" onclick="addItem()">
-                                    <i class="fas fa-plus"></i> Add Item
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Totals -->
-                        <div class="totals-section">
-                            <div class="totals-grid">
-                                <div class="total-label">Subtotal:</div>
-                                <div class="total-value" id="subtotal">₹0.00</div>
-
-                                <div class="total-label">Tax (%):</div>
-                                <div class="form-group" style="text-align:right;">
-                                    <input type="number" class="form-control" id="taxRate" value="0" style="text-align:right;" onchange="calculateTotals()">
-                                </div>
-
-                                <div class="total-label">Tax Amount:</div>
-                                <div class="total-value" id="taxAmount">₹0.00</div>
-
-                                <div class="total-label">Discount (%):</div>
-                                <div class="form-group" style="text-align:right;">
-                                    <input type="number" class="form-control" id="discount" value="0" style="text-align:right;" onchange="calculateTotals()">
-                                </div>
-
-                                <div class="total-label">Discount Amount:</div>
-                                <div class="total-value" id="discountAmount">₹0.00</div>
-
-                                <div class="total-label grand-total-label">Grand Total:</div>
-                                <div class="total-value grand-total" id="grandTotal">₹0.00</div>
-                            </div>
-                        </div>
-
-                        <!-- Notes -->
-                        <div class="form-section">
-                            <div class="section-title">Notes / Terms &amp; Conditions</div>
-                            <div class="form-group">
-                                <textarea class="form-control" id="notes" rows="4"
-                                    placeholder="Enter any additional notes, terms & conditions..."></textarea>
-                            </div>
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div class="action-buttons">
-                            <button type="button" class="btn btn-secondary" onclick="resetForm()">
-                                <i class="fas fa-redo"></i> Reset
-                            </button>
-                            <button type="button" class="btn" onclick="saveQuotation()">
-                                <i class="fas fa-save"></i> Save Quotation
-                            </button>
-                            <button type="button" class="btn" onclick="generatePDF()">
-                                <i class="fas fa-file-pdf"></i> Generate PDF
-                            </button>
-                        </div>
-                    </form>
-                </div>
+        <div class="content-card">
+            <div class="content-header">
+                <h2><i class="fas fa-file-invoice-dollar"></i> Create New Quotation</h2>
             </div>
-        </div>
-    </main>
+            <div class="content-body">
+                <form id="quotationForm">
 
-    <script>
-        let itemCounter = 0;
-        let customers = [];
+                    <!-- Quotation Details -->
+                    <div class="form-section">
+                        <div class="section-title">Quotation Details</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Quotation Number *</label>
+                                <input type="text" class="form-control" id="quotationNumber" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Date *</label>
+                                <input type="date" class="form-control" id="date" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Valid Until</label>
+                                <input type="date" class="form-control" id="validUntil">
+                            </div>
+                        </div>
+                    </div>
 
-        document.addEventListener('DOMContentLoaded', function() {
-            setDefaultDate();
-            generateQuotationNumber();
-            loadCustomers();
-            addItem();
-        });
+                    <!-- Customer Details -->
+                    <div class="form-section">
+                        <div class="section-title">Customer Details</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Select Customer</label>
+                                <select class="form-select" id="customerSelect" onchange="loadCustomerDetails()">
+                                    <option value="">-- Select Customer --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Customer Name *</label>
+                                <input type="text" class="form-control" id="customerName" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Phone</label>
+                                <input type="tel" class="form-control" id="customerPhone">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" id="customerEmail">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Address</label>
+                            <textarea class="form-control" id="customerAddress"></textarea>
+                        </div>
+                    </div>
 
-        function setDefaultDate() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('date').value = today;
-            const validUntil = new Date();
-            validUntil.setDate(validUntil.getDate() + 15);
-            document.getElementById('validUntil').value = validUntil.toISOString().split('T')[0];
-        }
+                    <!-- Company Details -->
+                    <div class="form-section">
+                        <div class="section-title">Your Company Details</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Company Name</label>
+                                <input type="text" class="form-control" id="companyName" value="PANDIT FURNITURE">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Phone</label>
+                                <input type="tel" class="form-control" id="companyPhone">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" id="companyEmail">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Address</label>
+                            <textarea class="form-control" id="companyAddress"></textarea>
+                        </div>
+                    </div>
 
-        function generateQuotationNumber() {
-            const date = new Date();
-            const number = `QT-${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}${String(date.getDate()).padStart(2,'0')}-${String(Math.floor(Math.random()*1000)).padStart(3,'0')}`;
-            document.getElementById('quotationNumber').value = number;
-        }
+                    <!-- Items Section -->
+                    <div class="form-section">
+                        <div class="section-title">Items</div>
+                        <div class="items-section" id="itemsContainer"></div>
+                        <div style="margin-top:1rem;">
+                            <button type="button" class="btn btn-add-item" onclick="addItem()">
+                                <i class="fas fa-plus"></i> Add Item
+                            </button>
+                        </div>
+                    </div>
 
-        function loadCustomers() {
-            fetch('/api/customers/active')
-                .then(r => r.json())
-                .then(data => {
-                    customers = data;
-                    const select = document.getElementById('customerSelect');
-                    data.forEach(c => {
-                        const o = document.createElement('option');
-                        o.value = c.id;
-                        o.textContent = c.customerName;
-                        select.appendChild(o);
-                    });
-                })
-                .catch(e => console.error('Error loading customers:', e));
-        }
+                    <!-- Totals -->
+                    <div class="totals-section">
+                        <div class="totals-grid">
+                            <div class="total-label">Subtotal:</div>
+                            <div class="total-value" id="subtotal">₹0.00</div>
 
-        function loadCustomerDetails() {
-            const id = document.getElementById('customerSelect').value;
-            if (!id) return;
-            const c = customers.find(x => x.id == id);
-            if (c) {
-                document.getElementById('customerName').value    = c.customerName;
-                document.getElementById('customerPhone').value   = c.phone || '';
-                document.getElementById('customerEmail').value   = c.email || '';
-                document.getElementById('customerAddress').value = c.address || '';
-            }
-        }
+                            <div class="total-label">Tax (%):</div>
+                            <div class="form-group" style="text-align:right;">
+                                <input type="number" class="form-control" id="taxRate" value="0"
+                                       style="text-align:right;" onchange="calculateTotals()">
+                            </div>
 
-        // ── Work type toggle (Sq Ft / Running Ft) ────────────────────
-        const workTypeState = {};
+                            <div class="total-label">Tax Amount:</div>
+                            <div class="total-value" id="taxAmount">₹0.00</div>
 
-        function setWorkType(id, type) {
-            workTypeState[id] = type;
-            const wrap = document.getElementById(`work-type-${id}`);
-            wrap.querySelectorAll('.unit-btn').forEach(b => {
-                b.classList.toggle('active', b.textContent.trim() === (type === 'rft' ? 'Running Ft' : 'Sq Ft'));
-            });
-            const widthGroup = document.getElementById(`width-group-${id}`);
-            const rateLabel  = document.getElementById(`rate-label-${id}`);
-            const sqftLabel  = document.getElementById(`sqft-label-${id}`);
-            if (type === 'rft') {
-                widthGroup.style.display = 'none';
-                sqftLabel.textContent    = 'RFT';
-                rateLabel.textContent    = 'Rate / RFT (₹)';
-                document.getElementById(`size-${id}`).placeholder = "6.00 RFT";
-            } else {
-                widthGroup.style.display = '';
-                sqftLabel.textContent    = 'Sq Ft';
-                rateLabel.textContent    = 'Rate / Sq Ft (₹)';
-                document.getElementById(`size-${id}`).placeholder = "6' × 7'";
-            }
-            document.getElementById(`size-${id}`).value  = '';
-            document.getElementById(`sqft-${id}`).value  = '';
-            document.getElementById(`price-${id}`).value = '';
-            document.getElementById(`total-${id}`).value = '';
-            calculateTotals();
-        }
+                            <div class="total-label">Discount (%):</div>
+                            <div class="form-group" style="text-align:right;">
+                                <input type="number" class="form-control" id="discount" value="0"
+                                       style="text-align:right;" onchange="calculateTotals()">
+                            </div>
 
-        // ── Unit conversion (mm ↔ ft) ─────────────────────────────────
-        const unitState = {};
+                            <div class="total-label">Discount Amount:</div>
+                            <div class="total-value" id="discountAmount">₹0.00</div>
 
-        function setUnit(id, dim, unit) {
-            const key = `${dim}-${id}`;
-            const prev = unitState[key] || 'ft';
-            if (prev === unit) return;
-            unitState[key] = unit;
-            const wrap = document.getElementById(`${dim}-unit-${id}`);
-            wrap.querySelectorAll('.unit-btn').forEach(b => {
-                b.classList.toggle('active', b.textContent.trim() === unit);
-            });
-            const input = document.getElementById(dim === 'len' ? `length-${id}` : `width-${id}`);
-            const val = parseFloat(input.value);
-            if (!isNaN(val) && val > 0) {
-                if (unit === 'mm') {
-                    input.value = (val * 304.8).toFixed(0);
-                    input.step = '1';
-                    input.placeholder = dim === 'len' ? '1829' : '2134';
-                } else {
-                    input.value = (val / 304.8).toFixed(2);
-                    input.step = '0.01';
-                    input.placeholder = dim === 'len' ? '6' : '7';
-                }
-            } else {
-                input.step = unit === 'mm' ? '1' : '0.01';
-                input.placeholder = unit === 'mm' ? (dim === 'len' ? '1829' : '2134') : (dim === 'len' ? '6' : '7');
-            }
-            convertAndCalculate(id, dim);
-        }
+                            <div class="total-label grand-total-label">Grand Total:</div>
+                            <div class="total-value grand-total" id="grandTotal">₹0.00</div>
+                        </div>
+                    </div>
 
-        function convertAndCalculate(id, dim) {
-            const key = `${dim}-${id}`;
-            const unit = unitState[key] || 'ft';
-            const input = document.getElementById(dim === 'len' ? `length-${id}` : `width-${id}`);
-            const raw = parseFloat(input.value) || 0;
-            const ftVal = unit === 'mm' ? raw / 304.8 : raw;
-            const hidId = dim === 'len' ? `length-ft-${id}` : `width-ft-${id}`;
-            let hid = document.getElementById(hidId);
-            if (!hid) {
-                hid = document.createElement('input');
-                hid.type = 'hidden';
-                hid.id = hidId;
-                input.parentNode.appendChild(hid);
-            }
-            hid.value = ftVal;
-            calculateItem(id);
-        }
+                    <!-- Notes -->
+                    <div class="form-section">
+                        <div class="section-title">Notes / Terms &amp; Conditions</div>
+                        <div class="form-group">
+                            <textarea class="form-control" id="notes" rows="4"
+                                placeholder="Enter any additional notes, terms & conditions..."></textarea>
+                        </div>
+                    </div>
 
-        // ── Autocomplete product list ──────────────────────────────
-        const PRODUCTS = [
-            'Bed (Single)', 'Bed (Double / Queen)', 'Bed (King Size)',
-            'Bedside Table', 'Dressing Table', 'Diwan',
-            'Wardrobe (2 Door)', 'Wardrobe (3 Door)', 'Wardrobe (4 Door)',
-            'Almirah', 'Shoe Rack', 'Loft / Storage Unit', 'Chest of Drawers',
-            'Sofa (2 Seater)', 'Sofa (3 Seater)', 'Sofa (L-Shape)',
-            'TV Unit', 'Center Table', 'Corner Shelf', 'Display Unit', 'Wall Shelf',
-            'Kitchen Cabinet (Upper)', 'Kitchen Cabinet (Lower)',
-            'Kitchen Cabinet (Full)', 'Pantry Unit', 'Modular Kitchen',
-            'Study Table', 'Bookshelf', 'Computer Table', 'Office Table', 'Filing Cabinet',
-            'Door Frame', 'Door Shutter', 'Partition Panel',
-            'False Ceiling Panel', 'Wall Panel',
-            'Pooja Unit', 'Dining Table', 'Crockery Unit',
-            'Staircase Railing Panel', 'Baby Cot', 'Swing (Jhula)'
-        ];
-
-        let acIndex = {};
-
-        function showSuggestions(id) {
-            const input = document.getElementById(`desc-${id}`);
-            const box   = document.getElementById(`suggest-${id}`);
-            const val   = input.value.trim().toLowerCase();
-            box.innerHTML = '';
-            acIndex[id] = -1;
-            if (!val) { box.style.display = 'none'; return; }
-            const matches = PRODUCTS.filter(p => p.toLowerCase().includes(val));
-            if (!matches.length) { box.style.display = 'none'; return; }
-            matches.forEach((p, i) => {
-                const item = document.createElement('div');
-                item.className = 'ac-item';
-                item.dataset.idx = i;
-                const idx = p.toLowerCase().indexOf(val);
-                item.innerHTML = p.substring(0, idx) +
-                    '<strong>' + p.substring(idx, idx + val.length) + '</strong>' +
-                    p.substring(idx + val.length);
-                item.onmousedown = () => selectProduct(id, p);
-                box.appendChild(item);
-            });
-            box.style.display = 'block';
-        }
-
-        function selectProduct(id, value) {
-            document.getElementById(`desc-${id}`).value = value;
-            document.getElementById(`suggest-${id}`).style.display = 'none';
-        }
-
-        function hideSuggestions(id) {
-            setTimeout(() => {
-                const box = document.getElementById(`suggest-${id}`);
-                if (box) box.style.display = 'none';
-            }, 150);
-        }
-
-        function handleKey(e, id) {
-            const box   = document.getElementById(`suggest-${id}`);
-            const items = box.querySelectorAll('.ac-item');
-            if (!items.length) return;
-            if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                acIndex[id] = Math.min((acIndex[id] ?? -1) + 1, items.length - 1);
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                acIndex[id] = Math.max((acIndex[id] ?? 0) - 1, 0);
-            } else if (e.key === 'Enter') {
-                e.preventDefault();
-                const idx = acIndex[id] >= 0 ? acIndex[id] : 0;
-                if (items[idx]) selectProduct(id, items[idx].textContent);
-                return;
-            } else if (e.key === 'Escape') {
-                box.style.display = 'none'; return;
-            } else { return; }
-            items.forEach(i => i.classList.remove('ac-active'));
-            if (items[acIndex[id]]) items[acIndex[id]].classList.add('ac-active');
-        }
-
-        function addItem() {
-            itemCounter++;
-            const itemHtml = `
-                <div class="item-row" id="item-${itemCounter}">
-                    <div class="item-header">
-                        <span class="item-number">Item #${itemCounter}</span>
-                        <span class="unit-toggle" style="margin-left:auto;margin-right:1rem;" id="work-type-${itemCounter}">
-                            <button type="button" class="unit-btn active" onclick="setWorkType(${itemCounter},'sqft')">Sq Ft</button>
-                            <button type="button" class="unit-btn" onclick="setWorkType(${itemCounter},'rft')">Running Ft</button>
-                        </span>
-                        <button type="button" class="btn-remove" onclick="removeItem(${itemCounter})">
-                            <i class="fas fa-trash"></i> Remove
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                            <i class="fas fa-redo"></i> Reset
+                        </button>
+                        <button type="button" class="btn" onclick="saveQuotation()">
+                            <i class="fas fa-save"></i> Save Quotation
+                        </button>
+                        <button type="button" class="btn" onclick="generatePDF()">
+                            <i class="fas fa-file-pdf"></i> Generate PDF
                         </button>
                     </div>
 
-                    <div class="form-group" style="margin-bottom:1rem;position:relative;">
-                        <label class="form-label">Product Name</label>
-                        <input type="text" class="form-control" id="desc-${itemCounter}"
-                               placeholder="Type to search: Bed, Wardrobe, TV Unit..."
-                               autocomplete="off"
-                               oninput="showSuggestions(${itemCounter})"
-                               onkeydown="handleKey(event,${itemCounter})"
-                               onfocus="showSuggestions(${itemCounter})"
-                               onblur="hideSuggestions(${itemCounter})">
-                        <div class="autocomplete-list" id="suggest-${itemCounter}"></div>
-                    </div>
+                </form>
+            </div>
+        </div>
 
-                    <div class="size-inputs">
-                        <div class="form-group">
-                            <label class="form-label" style="display:flex;align-items:center;justify-content:space-between;">
-                                <span>Length</span>
-                                <span class="unit-toggle" id="len-unit-${itemCounter}">
-                                    <button type="button" class="unit-btn active" onclick="setUnit(${itemCounter},'len','ft')">ft</button>
-                                    <button type="button" class="unit-btn" onclick="setUnit(${itemCounter},'len','mm')">mm</button>
-                                </span>
-                            </label>
-                            <input type="number" class="form-control" id="length-${itemCounter}"
-                                   step="0.1" placeholder="6"
-                                   oninput="convertAndCalculate(${itemCounter},'len')"
-                                   onchange="convertAndCalculate(${itemCounter},'len')">
-                        </div>
-                        <div class="form-group" id="width-group-${itemCounter}">
-                            <label class="form-label" style="display:flex;align-items:center;justify-content:space-between;">
-                                <span>Width</span>
-                                <span class="unit-toggle" id="wid-unit-${itemCounter}">
-                                    <button type="button" class="unit-btn active" onclick="setUnit(${itemCounter},'wid','ft')">ft</button>
-                                    <button type="button" class="unit-btn" onclick="setUnit(${itemCounter},'wid','mm')">mm</button>
-                                </span>
-                            </label>
-                            <input type="number" class="form-control" id="width-${itemCounter}"
-                                   step="0.1" placeholder="7"
-                                   oninput="convertAndCalculate(${itemCounter},'wid')"
-                                   onchange="convertAndCalculate(${itemCounter},'wid')">
-                        </div>
-                        <div class="form-group auto-field">
-                            <label class="form-label">Size</label>
-                            <input type="text" class="form-control" id="size-${itemCounter}" readonly placeholder="6' × 7'">
-                        </div>
-                        <div class="form-group auto-field" id="sqft-group-${itemCounter}">
-                            <label class="form-label" id="sqft-label-${itemCounter}">Sq Ft</label>
-                            <input type="number" class="form-control" id="sqft-${itemCounter}" readonly placeholder="42">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" id="rate-label-${itemCounter}">Rate / Sq Ft (₹)</label>
-                            <input type="number" class="form-control" id="rate-${itemCounter}"
-                                   step="0.01" placeholder="150" onchange="calculateItem(${itemCounter})">
-                        </div>
-                        <div class="form-group auto-field">
-                            <label class="form-label">Unit Price (₹)</label>
-                            <input type="number" class="form-control" id="price-${itemCounter}" readonly placeholder="6300">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Quantity</label>
-                            <input type="number" class="form-control" id="qty-${itemCounter}" value="1" min="1" onchange="calculateItem(${itemCounter})">
-                        </div>
-                        <div class="form-group auto-field">
-                            <label class="form-label">Total (₹)</label>
-                            <input type="number" class="form-control" id="total-${itemCounter}" readonly placeholder="6300">
-                        </div>
+    </div><!-- /page -->
+</main>
+
+<script>
+    let itemCounter = 0;
+    let customers = [];
+
+    document.addEventListener('DOMContentLoaded', function() {
+        setDefaultDate();
+        generateQuotationNumber();
+        loadCustomers();
+        addItem();
+    });
+
+    function setDefaultDate() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('date').value = today;
+        const validUntil = new Date();
+        validUntil.setDate(validUntil.getDate() + 15);
+        document.getElementById('validUntil').value = validUntil.toISOString().split('T')[0];
+    }
+
+    function generateQuotationNumber() {
+        const date = new Date();
+        const number = `QT-${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}${String(date.getDate()).padStart(2,'0')}-${String(Math.floor(Math.random()*1000)).padStart(3,'0')}`;
+        document.getElementById('quotationNumber').value = number;
+    }
+
+    function loadCustomers() {
+        fetch('/api/customers/active')
+            .then(r => r.json())
+            .then(data => {
+                customers = data;
+                const select = document.getElementById('customerSelect');
+                data.forEach(c => {
+                    const o = document.createElement('option');
+                    o.value = c.id;
+                    o.textContent = c.customerName;
+                    select.appendChild(o);
+                });
+            })
+            .catch(e => console.error('Error loading customers:', e));
+    }
+
+    function loadCustomerDetails() {
+        const id = document.getElementById('customerSelect').value;
+        if (!id) return;
+        const c = customers.find(x => x.id == id);
+        if (c) {
+            document.getElementById('customerName').value    = c.customerName;
+            document.getElementById('customerPhone').value   = c.phone || '';
+            document.getElementById('customerEmail').value   = c.email || '';
+            document.getElementById('customerAddress').value = c.address || '';
+        }
+    }
+
+    // ── Work type toggle (Sq Ft / Running Ft) ─────────────────────────────
+    const workTypeState = {};
+
+    function setWorkType(id, type) {
+        workTypeState[id] = type;
+        const wrap = document.getElementById(`work-type-${id}`);
+        wrap.querySelectorAll('.unit-btn').forEach(b => {
+            b.classList.toggle('active', b.textContent.trim() === (type === 'rft' ? 'Running Ft' : 'Sq Ft'));
+        });
+        const widthGroup = document.getElementById(`width-group-${id}`);
+        const rateLabel  = document.getElementById(`rate-label-${id}`);
+        const sqftLabel  = document.getElementById(`sqft-label-${id}`);
+        if (type === 'rft') {
+            widthGroup.style.display = 'none';
+            sqftLabel.textContent    = 'RFT';
+            rateLabel.textContent    = 'Rate / RFT (₹)';
+            document.getElementById(`size-${id}`).placeholder = "6.00 RFT";
+        } else {
+            widthGroup.style.display = '';
+            sqftLabel.textContent    = 'Sq Ft';
+            rateLabel.textContent    = 'Rate / Sq Ft (₹)';
+            document.getElementById(`size-${id}`).placeholder = "6' × 7'";
+        }
+        document.getElementById(`size-${id}`).value  = '';
+        document.getElementById(`sqft-${id}`).value  = '';
+        document.getElementById(`price-${id}`).value = '';
+        document.getElementById(`total-${id}`).value = '';
+        calculateTotals();
+    }
+
+    // ── Unit conversion (mm ↔ ft) ──────────────────────────────────────────
+    const unitState = {};
+
+    function setUnit(id, dim, unit) {
+        const key = `${dim}-${id}`;
+        const prev = unitState[key] || 'ft';
+        if (prev === unit) return;
+        unitState[key] = unit;
+        const wrap = document.getElementById(`${dim}-unit-${id}`);
+        wrap.querySelectorAll('.unit-btn').forEach(b => {
+            b.classList.toggle('active', b.textContent.trim() === unit);
+        });
+        const input = document.getElementById(dim === 'len' ? `length-${id}` : `width-${id}`);
+        const val = parseFloat(input.value);
+        if (!isNaN(val) && val > 0) {
+            if (unit === 'mm') {
+                input.value = (val * 304.8).toFixed(0);
+                input.step = '1';
+                input.placeholder = dim === 'len' ? '1829' : '2134';
+            } else {
+                input.value = (val / 304.8).toFixed(2);
+                input.step = '0.01';
+                input.placeholder = dim === 'len' ? '6' : '7';
+            }
+        } else {
+            input.step = unit === 'mm' ? '1' : '0.01';
+            input.placeholder = unit === 'mm' ? (dim === 'len' ? '1829' : '2134') : (dim === 'len' ? '6' : '7');
+        }
+        convertAndCalculate(id, dim);
+    }
+
+    function convertAndCalculate(id, dim) {
+        const key = `${dim}-${id}`;
+        const unit = unitState[key] || 'ft';
+        const input = document.getElementById(dim === 'len' ? `length-${id}` : `width-${id}`);
+        const raw = parseFloat(input.value) || 0;
+        const ftVal = unit === 'mm' ? raw / 304.8 : raw;
+        const hidId = dim === 'len' ? `length-ft-${id}` : `width-ft-${id}`;
+        let hid = document.getElementById(hidId);
+        if (!hid) {
+            hid = document.createElement('input');
+            hid.type = 'hidden'; hid.id = hidId;
+            input.parentNode.appendChild(hid);
+        }
+        hid.value = ftVal;
+        calculateItem(id);
+    }
+
+    // ── Autocomplete ───────────────────────────────────────────────────────
+    const PRODUCTS = [
+        'Bed (Single)', 'Bed (Double / Queen)', 'Bed (King Size)',
+        'Bedside Table', 'Dressing Table', 'Diwan',
+        'Wardrobe (2 Door)', 'Wardrobe (3 Door)', 'Wardrobe (4 Door)',
+        'Almirah', 'Shoe Rack', 'Loft / Storage Unit', 'Chest of Drawers',
+        'Sofa (2 Seater)', 'Sofa (3 Seater)', 'Sofa (L-Shape)',
+        'TV Unit', 'Center Table', 'Corner Shelf', 'Display Unit', 'Wall Shelf',
+        'Kitchen Cabinet (Upper)', 'Kitchen Cabinet (Lower)',
+        'Kitchen Cabinet (Full)', 'Pantry Unit', 'Modular Kitchen',
+        'Study Table', 'Bookshelf', 'Computer Table', 'Office Table', 'Filing Cabinet',
+        'Door Frame', 'Door Shutter', 'Partition Panel',
+        'False Ceiling Panel', 'Wall Panel',
+        'Pooja Unit', 'Dining Table', 'Crockery Unit',
+        'Staircase Railing Panel', 'Baby Cot', 'Swing (Jhula)'
+    ];
+    let acIndex = {};
+
+    function showSuggestions(id) {
+        const input = document.getElementById(`desc-${id}`);
+        const box   = document.getElementById(`suggest-${id}`);
+        const val   = input.value.trim().toLowerCase();
+        box.innerHTML = ''; acIndex[id] = -1;
+        if (!val) { box.style.display = 'none'; return; }
+        const matches = PRODUCTS.filter(p => p.toLowerCase().includes(val));
+        if (!matches.length) { box.style.display = 'none'; return; }
+        matches.forEach((p, i) => {
+            const item = document.createElement('div');
+            item.className = 'ac-item'; item.dataset.idx = i;
+            const idx2 = p.toLowerCase().indexOf(val);
+            item.innerHTML = p.substring(0, idx2) +
+                '<strong>' + p.substring(idx2, idx2 + val.length) + '</strong>' +
+                p.substring(idx2 + val.length);
+            item.onmousedown = () => selectProduct(id, p);
+            box.appendChild(item);
+        });
+        box.style.display = 'block';
+    }
+    function selectProduct(id, value) {
+        document.getElementById(`desc-${id}`).value = value;
+        document.getElementById(`suggest-${id}`).style.display = 'none';
+    }
+    function hideSuggestions(id) {
+        setTimeout(() => { const b = document.getElementById(`suggest-${id}`); if (b) b.style.display = 'none'; }, 150);
+    }
+    function handleKey(e, id) {
+        const box = document.getElementById(`suggest-${id}`);
+        const items = box.querySelectorAll('.ac-item');
+        if (!items.length) return;
+        if (e.key === 'ArrowDown') { e.preventDefault(); acIndex[id] = Math.min((acIndex[id] ?? -1) + 1, items.length - 1); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); acIndex[id] = Math.max((acIndex[id] ?? 0) - 1, 0); }
+        else if (e.key === 'Enter') { e.preventDefault(); const idx = acIndex[id] >= 0 ? acIndex[id] : 0; if (items[idx]) selectProduct(id, items[idx].textContent); return; }
+        else if (e.key === 'Escape') { box.style.display = 'none'; return; }
+        else { return; }
+        items.forEach(i => i.classList.remove('ac-active'));
+        if (items[acIndex[id]]) items[acIndex[id]].classList.add('ac-active');
+    }
+
+    // ── Add item row ───────────────────────────────────────────────────────
+    function addItem() {
+        itemCounter++;
+        const html = `
+            <div class="item-row" id="item-${itemCounter}">
+                <div class="item-header">
+                    <span class="item-number">Item #${itemCounter}</span>
+                    <span class="unit-toggle" style="margin-left:.5rem;" id="work-type-${itemCounter}">
+                        <button type="button" class="unit-btn active" onclick="setWorkType(${itemCounter},'sqft')">Sq Ft</button>
+                        <button type="button" class="unit-btn" onclick="setWorkType(${itemCounter},'rft')">Running Ft</button>
+                    </span>
+                    <button type="button" class="btn-remove" onclick="removeItem(${itemCounter})">
+                        <i class="fas fa-trash"></i> Remove
+                    </button>
+                </div>
+
+                <div class="form-group" style="margin-bottom:.85rem;position:relative;">
+                    <label class="form-label">Product Name</label>
+                    <input type="text" class="form-control" id="desc-${itemCounter}"
+                           placeholder="Type to search: Bed, Wardrobe, TV Unit..."
+                           autocomplete="off"
+                           oninput="showSuggestions(${itemCounter})"
+                           onkeydown="handleKey(event,${itemCounter})"
+                           onfocus="showSuggestions(${itemCounter})"
+                           onblur="hideSuggestions(${itemCounter})">
+                    <div class="autocomplete-list" id="suggest-${itemCounter}"></div>
+                </div>
+
+                <div class="size-inputs">
+                    <div class="form-group">
+                        <label class="form-label" style="display:flex;align-items:center;justify-content:space-between;">
+                            <span>Length</span>
+                            <span class="unit-toggle" id="len-unit-${itemCounter}">
+                                <button type="button" class="unit-btn active" onclick="setUnit(${itemCounter},'len','ft')">ft</button>
+                                <button type="button" class="unit-btn" onclick="setUnit(${itemCounter},'len','mm')">mm</button>
+                            </span>
+                        </label>
+                        <input type="number" class="form-control" id="length-${itemCounter}"
+                               step="0.1" placeholder="6"
+                               oninput="convertAndCalculate(${itemCounter},'len')"
+                               onchange="convertAndCalculate(${itemCounter},'len')">
+                    </div>
+                    <div class="form-group" id="width-group-${itemCounter}">
+                        <label class="form-label" style="display:flex;align-items:center;justify-content:space-between;">
+                            <span>Width</span>
+                            <span class="unit-toggle" id="wid-unit-${itemCounter}">
+                                <button type="button" class="unit-btn active" onclick="setUnit(${itemCounter},'wid','ft')">ft</button>
+                                <button type="button" class="unit-btn" onclick="setUnit(${itemCounter},'wid','mm')">mm</button>
+                            </span>
+                        </label>
+                        <input type="number" class="form-control" id="width-${itemCounter}"
+                               step="0.1" placeholder="7"
+                               oninput="convertAndCalculate(${itemCounter},'wid')"
+                               onchange="convertAndCalculate(${itemCounter},'wid')">
+                    </div>
+                    <div class="form-group auto-field">
+                        <label class="form-label">Size</label>
+                        <input type="text" class="form-control" id="size-${itemCounter}" readonly placeholder="6' × 7'">
+                    </div>
+                    <div class="form-group auto-field" id="sqft-group-${itemCounter}">
+                        <label class="form-label" id="sqft-label-${itemCounter}">Sq Ft</label>
+                        <input type="number" class="form-control" id="sqft-${itemCounter}" readonly placeholder="42">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" id="rate-label-${itemCounter}">Rate / Sq Ft (₹)</label>
+                        <input type="number" class="form-control" id="rate-${itemCounter}"
+                               step="0.01" placeholder="150" onchange="calculateItem(${itemCounter})">
+                    </div>
+                    <div class="form-group auto-field">
+                        <label class="form-label">Unit Price (₹)</label>
+                        <input type="number" class="form-control" id="price-${itemCounter}" readonly placeholder="6300">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="qty-${itemCounter}"
+                               value="1" min="1" onchange="calculateItem(${itemCounter})">
+                    </div>
+                    <div class="form-group auto-field">
+                        <label class="form-label">Total (₹)</label>
+                        <input type="number" class="form-control" id="total-${itemCounter}" readonly placeholder="6300">
                     </div>
                 </div>
-            `;
-            document.getElementById('itemsContainer').insertAdjacentHTML('beforeend', itemHtml);
+            </div>`;
+        document.getElementById('itemsContainer').insertAdjacentHTML('beforeend', html);
+    }
+
+    function removeItem(id) {
+        document.getElementById(`item-${id}`).remove();
+        calculateTotals();
+    }
+
+    function calculateItem(id) {
+        const length = parseFloat(document.getElementById(`length-ft-${id}`)?.value) ||
+                       parseFloat(document.getElementById(`length-${id}`).value) || 0;
+        const width  = parseFloat(document.getElementById(`width-ft-${id}`)?.value) ||
+                       parseFloat(document.getElementById(`width-${id}`).value) || 0;
+        const rate = parseFloat(document.getElementById(`rate-${id}`).value) || 0;
+        const qty  = parseFloat(document.getElementById(`qty-${id}`).value) || 1;
+        const isRft = (workTypeState[id] || 'sqft') === 'rft';
+
+        let unitPrice;
+        if (isRft) {
+            document.getElementById(`sqft-${id}`).value = length.toFixed(2);
+            if (length > 0) document.getElementById(`size-${id}`).value = `${length.toFixed(2)} RFT`;
+            unitPrice = length * rate;
+        } else {
+            const sqft = length * width;
+            document.getElementById(`sqft-${id}`).value = sqft.toFixed(2);
+            if (length > 0 && width > 0)
+                document.getElementById(`size-${id}`).value = `${length.toFixed(2)}' × ${width.toFixed(2)}'`;
+            unitPrice = sqft * rate;
         }
+        document.getElementById(`price-${id}`).value = unitPrice.toFixed(2);
+        document.getElementById(`total-${id}`).value = (unitPrice * qty).toFixed(2);
+        calculateTotals();
+    }
 
-        function removeItem(id) {
-            document.getElementById(`item-${id}`).remove();
-            calculateTotals();
-        }
+    function calculateTotals() {
+        let subtotal = 0;
+        document.querySelectorAll('.item-row').forEach(row => {
+            const id = row.id.split('-')[1];
+            subtotal += parseFloat(document.getElementById(`total-${id}`).value) || 0;
+        });
+        const taxRate  = parseFloat(document.getElementById('taxRate').value) || 0;
+        const discount = parseFloat(document.getElementById('discount').value) || 0;
+        const taxAmount      = (subtotal * taxRate) / 100;
+        const discountAmount = (subtotal * discount) / 100;
+        const grandTotal     = subtotal + taxAmount - discountAmount;
+        document.getElementById('subtotal').textContent       = '₹' + subtotal.toFixed(2);
+        document.getElementById('taxAmount').textContent      = '₹' + taxAmount.toFixed(2);
+        document.getElementById('discountAmount').textContent = '₹' + discountAmount.toFixed(2);
+        document.getElementById('grandTotal').textContent     = '₹' + grandTotal.toFixed(2);
+    }
 
-        function calculateItem(id) {
-            const length = parseFloat(document.getElementById(`length-ft-${id}`)?.value) ||
-                           parseFloat(document.getElementById(`length-${id}`).value) || 0;
-            const width  = parseFloat(document.getElementById(`width-ft-${id}`)?.value) ||
-                           parseFloat(document.getElementById(`width-${id}`).value) || 0;
-            const rate = parseFloat(document.getElementById(`rate-${id}`).value) || 0;
-            const qty  = parseFloat(document.getElementById(`qty-${id}`).value) || 1;
-            const isRft = (workTypeState[id] || 'sqft') === 'rft';
-
-            let unitPrice;
-            if (isRft) {
-                document.getElementById(`sqft-${id}`).value = length.toFixed(2);
-                if (length > 0) document.getElementById(`size-${id}`).value = `${length.toFixed(2)} RFT`;
-                unitPrice = length * rate;
-            } else {
-                const sqft = length * width;
-                document.getElementById(`sqft-${id}`).value = sqft.toFixed(2);
-                if (length > 0 && width > 0)
-                    document.getElementById(`size-${id}`).value = `${length.toFixed(2)}' × ${width.toFixed(2)}'`;
-                unitPrice = sqft * rate;
-            }
-
-            document.getElementById(`price-${id}`).value = unitPrice.toFixed(2);
-            document.getElementById(`total-${id}`).value = (unitPrice * qty).toFixed(2);
-            calculateTotals();
-        }
-
-        function calculateTotals() {
-            let subtotal = 0;
-            document.querySelectorAll('.item-row').forEach(row => {
-                const id = row.id.split('-')[1];
-                subtotal += parseFloat(document.getElementById(`total-${id}`).value) || 0;
+    function saveQuotation() {
+        const items = [];
+        document.querySelectorAll('.item-row').forEach(row => {
+            const id = row.id.split('-')[1];
+            items.push({
+                description: document.getElementById(`desc-${id}`).value,
+                length: parseFloat(document.getElementById(`length-${id}`).value),
+                width: parseFloat(document.getElementById(`width-${id}`).value),
+                size: document.getElementById(`size-${id}`).value,
+                sqft: parseFloat(document.getElementById(`sqft-${id}`).value),
+                ratePerSqft: parseFloat(document.getElementById(`rate-${id}`).value),
+                unitPrice: parseFloat(document.getElementById(`price-${id}`).value),
+                quantity: parseFloat(document.getElementById(`qty-${id}`).value)
             });
-            const taxRate  = parseFloat(document.getElementById('taxRate').value) || 0;
-            const discount = parseFloat(document.getElementById('discount').value) || 0;
-            const taxAmount      = (subtotal * taxRate) / 100;
-            const discountAmount = (subtotal * discount) / 100;
-            const grandTotal     = subtotal + taxAmount - discountAmount;
-            document.getElementById('subtotal').textContent      = '₹' + subtotal.toFixed(2);
-            document.getElementById('taxAmount').textContent     = '₹' + taxAmount.toFixed(2);
-            document.getElementById('discountAmount').textContent = '₹' + discountAmount.toFixed(2);
-            document.getElementById('grandTotal').textContent    = '₹' + grandTotal.toFixed(2);
-        }
+        });
+        const quotation = {
+            quotationNumber: document.getElementById('quotationNumber').value,
+            date: document.getElementById('date').value,
+            validUntil: document.getElementById('validUntil').value,
+            customerName: document.getElementById('customerName').value,
+            customerPhone: document.getElementById('customerPhone').value,
+            customerEmail: document.getElementById('customerEmail').value,
+            customerAddress: document.getElementById('customerAddress').value,
+            companyName: document.getElementById('companyName').value,
+            companyPhone: document.getElementById('companyPhone').value,
+            companyEmail: document.getElementById('companyEmail').value,
+            companyAddress: document.getElementById('companyAddress').value,
+            items, taxRate: parseFloat(document.getElementById('taxRate').value),
+            discount: parseFloat(document.getElementById('discount').value),
+            notes: document.getElementById('notes').value
+        };
+        fetch('/api/quotations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(quotation)
+        })
+        .then(r => r.json())
+        .then(() => alert('✓ Quotation saved successfully!'))
+        .catch(() => alert('✗ Error saving quotation'));
+    }
 
-        function saveQuotation() {
-            const items = [];
-            document.querySelectorAll('.item-row').forEach(row => {
-                const id = row.id.split('-')[1];
-                items.push({
-                    description: document.getElementById(`desc-${id}`).value,
-                    length: parseFloat(document.getElementById(`length-${id}`).value),
-                    width: parseFloat(document.getElementById(`width-${id}`).value),
-                    size: document.getElementById(`size-${id}`).value,
-                    sqft: parseFloat(document.getElementById(`sqft-${id}`).value),
-                    ratePerSqft: parseFloat(document.getElementById(`rate-${id}`).value),
-                    unitPrice: parseFloat(document.getElementById(`price-${id}`).value),
-                    quantity: parseFloat(document.getElementById(`qty-${id}`).value)
-                });
+    function generatePDF() {
+        const items = [];
+        document.querySelectorAll('.item-row').forEach(row => {
+            const id = row.id.split('-')[1];
+            items.push({
+                description: document.getElementById(`desc-${id}`).value,
+                length: parseFloat(document.getElementById(`length-${id}`).value),
+                width: parseFloat(document.getElementById(`width-${id}`).value),
+                size: document.getElementById(`size-${id}`).value,
+                sqft: parseFloat(document.getElementById(`sqft-${id}`).value),
+                ratePerSqft: parseFloat(document.getElementById(`rate-${id}`).value),
+                unitPrice: parseFloat(document.getElementById(`price-${id}`).value),
+                quantity: parseFloat(document.getElementById(`qty-${id}`).value)
             });
-            const quotation = {
-                quotationNumber: document.getElementById('quotationNumber').value,
-                date: document.getElementById('date').value,
-                validUntil: document.getElementById('validUntil').value,
-                customerName: document.getElementById('customerName').value,
-                customerPhone: document.getElementById('customerPhone').value,
-                customerEmail: document.getElementById('customerEmail').value,
-                customerAddress: document.getElementById('customerAddress').value,
-                companyName: document.getElementById('companyName').value,
-                companyPhone: document.getElementById('companyPhone').value,
-                companyEmail: document.getElementById('companyEmail').value,
-                companyAddress: document.getElementById('companyAddress').value,
-                items, taxRate: parseFloat(document.getElementById('taxRate').value),
-                discount: parseFloat(document.getElementById('discount').value),
-                notes: document.getElementById('notes').value
-            };
-            fetch('/api/quotations', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(quotation)
-            })
-            .then(r => r.json())
-            .then(() => alert('✓ Quotation saved successfully!'))
-            .catch(() => alert('✗ Error saving quotation'));
-        }
+        });
+        const quotation = {
+            quotationNumber: document.getElementById('quotationNumber').value,
+            date: document.getElementById('date').value,
+            validUntil: document.getElementById('validUntil').value,
+            customerName: document.getElementById('customerName').value,
+            customerPhone: document.getElementById('customerPhone').value,
+            customerEmail: document.getElementById('customerEmail').value,
+            customerAddress: document.getElementById('customerAddress').value,
+            companyName: document.getElementById('companyName').value,
+            companyPhone: document.getElementById('companyPhone').value,
+            companyEmail: document.getElementById('companyEmail').value,
+            companyAddress: document.getElementById('companyAddress').value,
+            items, taxRate: parseFloat(document.getElementById('taxRate').value),
+            discount: parseFloat(document.getElementById('discount').value),
+            notes: document.getElementById('notes').value
+        };
+        fetch('/api/quotations/generate-pdf', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(quotation)
+        })
+        .then(r => { if (!r.ok) throw new Error(); return r.blob(); })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `quotation-${quotation.quotationNumber}.pdf`;
+            document.body.appendChild(a); a.click();
+            window.URL.revokeObjectURL(url); document.body.removeChild(a);
+            alert('✓ PDF generated successfully!');
+        })
+        .catch(() => alert('✗ Error generating PDF'));
+    }
 
-        function generatePDF() {
-            const items = [];
-            document.querySelectorAll('.item-row').forEach(row => {
-                const id = row.id.split('-')[1];
-                items.push({
-                    description: document.getElementById(`desc-${id}`).value,
-                    length: parseFloat(document.getElementById(`length-${id}`).value),
-                    width: parseFloat(document.getElementById(`width-${id}`).value),
-                    size: document.getElementById(`size-${id}`).value,
-                    sqft: parseFloat(document.getElementById(`sqft-${id}`).value),
-                    ratePerSqft: parseFloat(document.getElementById(`rate-${id}`).value),
-                    unitPrice: parseFloat(document.getElementById(`price-${id}`).value),
-                    quantity: parseFloat(document.getElementById(`qty-${id}`).value)
-                });
-            });
-            const quotation = {
-                quotationNumber: document.getElementById('quotationNumber').value,
-                date: document.getElementById('date').value,
-                validUntil: document.getElementById('validUntil').value,
-                customerName: document.getElementById('customerName').value,
-                customerPhone: document.getElementById('customerPhone').value,
-                customerEmail: document.getElementById('customerEmail').value,
-                customerAddress: document.getElementById('customerAddress').value,
-                companyName: document.getElementById('companyName').value,
-                companyPhone: document.getElementById('companyPhone').value,
-                companyEmail: document.getElementById('companyEmail').value,
-                companyAddress: document.getElementById('companyAddress').value,
-                items, taxRate: parseFloat(document.getElementById('taxRate').value),
-                discount: parseFloat(document.getElementById('discount').value),
-                notes: document.getElementById('notes').value
-            };
-            fetch('/api/quotations/generate-pdf', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(quotation)
-            })
-            .then(r => { if (!r.ok) throw new Error(); return r.blob(); })
-            .then(blob => {
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `quotation-${quotation.quotationNumber}.pdf`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-                alert('✓ PDF generated successfully!');
-            })
-            .catch(() => alert('✗ Error generating PDF'));
+    function resetForm() {
+        if (confirm('Are you sure you want to reset the form?')) {
+            document.getElementById('quotationForm').reset();
+            document.getElementById('itemsContainer').innerHTML = '';
+            itemCounter = 0;
+            setDefaultDate();
+            generateQuotationNumber();
+            addItem();
         }
-
-        function resetForm() {
-            if (confirm('Are you sure you want to reset the form?')) {
-                document.getElementById('quotationForm').reset();
-                document.getElementById('itemsContainer').innerHTML = '';
-                itemCounter = 0;
-                setDefaultDate();
-                generateQuotationNumber();
-                addItem();
-            }
-        }
-    </script>
+    }
+</script>
 </body>
 </html>

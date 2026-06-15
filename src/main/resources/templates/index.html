@@ -1,432 +1,560 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+                xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Factory Pro Tools | Furniture Manufacturing Solutions</title>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <title>Dashboard | Factory Pro Tools</title>
+    <meta name="description" content="Factory Pro Tools – real-time manufacturing dashboard showing revenue, stock alerts, quotation status and recent activity.">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
+        /* ── Design tokens ─────────────────────────────────────────────── */
         :root {
-            --primary: #ff6b35;
-            --secondary: #1a1a1a;
-            --accent: #f7931e;
-            --bg: #0a0a0a;
-            --card-bg: #1a1a1a;
-            --text: #e0e0e0;
-            --text-muted: #888;
-            --border: #333;
+            --primary:   #ff6b35;
+            --accent:    #f7931e;
+            --bg:        #0a0a0a;
+            --surface:   #141414;
+            --card:      #1a1a1a;
+            --card2:     #1f1f1f;
+            --border:    #2a2a2a;
+            --text:      #e0e0e0;
+            --muted:     #888;
+            --green:     #22c55e;
+            --red:       #ef4444;
+            --blue:      #3b82f6;
+            --yellow:    #eab308;
+            --radius:    6px;
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Work Sans', sans-serif;
             background: var(--bg);
             color: var(--text);
-            line-height: 1.6;
-            overflow-x: hidden;
+            min-height: 100vh;
         }
 
-        /* Background Pattern */
+        /* ── Subtle grid background ─────────────────────────────────────── */
         body::before {
             content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 107, 53, 0.03) 2px, rgba(255, 107, 53, 0.03) 4px),
-                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255, 107, 53, 0.03) 2px, rgba(255, 107, 53, 0.03) 4px);
-            pointer-events: none;
-            z-index: 0;
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background-image:
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,107,53,.025) 2px, rgba(255,107,53,.025) 4px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255,107,53,.025) 2px, rgba(255,107,53,.025) 4px);
         }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
+        /* ── Top nav ────────────────────────────────────────────────────── */
+        .topbar {
+            background: rgba(20,20,20,.96);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(12px);
+            position: sticky; top: 0; z-index: 200;
             padding: 0 2rem;
-            position: relative;
-            z-index: 1;
+            height: 60px;
+            display: flex; align-items: center; justify-content: space-between;
         }
-
-        /* Header */
-        header {
-            padding: 2rem 0;
-            border-bottom: 2px solid var(--border);
-            background: rgba(26, 26, 26, 0.8);
-            backdrop-filter: blur(10px);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+        .topbar-left { display: flex; align-items: center; gap: .75rem; }
+        .logo-hex {
+            width: 34px; height: 34px;
+            background: linear-gradient(135deg,var(--primary),var(--accent));
+            clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+            animation: spin 20s linear infinite;
         }
-
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .logo-icon {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-            animation: rotate 20s linear infinite;
-        }
-
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .logo h1 {
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .site-name {
             font-family: 'Bebas Neue', sans-serif;
-            font-size: 2.5rem;
-            letter-spacing: 2px;
-            background: linear-gradient(90deg, var(--primary), var(--accent));
-            -webkit-background-clip: text;
-            background-clip: text;
+            font-size: 1.5rem; letter-spacing: 2px;
+            background: linear-gradient(90deg,var(--primary),var(--accent));
+            -webkit-background-clip: text; background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-
-        nav ul {
-            display: flex;
-            gap: 2rem;
-            list-style: none;
+        .topbar-right { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+        .nav-link {
+            color: var(--muted); text-decoration: none;
+            font-size: .82rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: .8px;
+            transition: color .2s;
         }
-
-        nav a {
-            color: var(--text);
-            text-decoration: none;
-            font-weight: 600;
+        .nav-link:hover { color: var(--primary); }
+        .logout-btn {
+            background: none; border: 1px solid var(--border);
+            color: var(--muted); cursor: pointer;
+            font-family: inherit; font-size: .82rem;
+            font-weight: 600; letter-spacing: .8px;
             text-transform: uppercase;
-            font-size: 0.9rem;
-            letter-spacing: 1px;
-            transition: all 0.3s;
-            position: relative;
+            padding: .35rem .9rem; border-radius: var(--radius);
+            transition: all .2s;
         }
+        .logout-btn:hover { border-color: var(--primary); color: var(--primary); }
 
-        nav a::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: var(--primary);
-            transition: width 0.3s;
-        }
+        /* ── Page wrapper ───────────────────────────────────────────────── */
+        .page { max-width: 1400px; margin: 0 auto; padding: 2rem; position: relative; z-index: 1; }
 
-        nav a:hover::after {
-            width: 100%;
-        }
-
-        /* Hero Section */
-        .hero {
-            padding: 6rem 0 4rem;
-            text-align: center;
-        }
-
-        .hero h2 {
+        /* ── Section heading ────────────────────────────────────────────── */
+        .section-title {
             font-family: 'Bebas Neue', sans-serif;
-            font-size: 4.5rem;
-            letter-spacing: 4px;
-            margin-bottom: 1rem;
-            line-height: 1.1;
-            animation: fadeInUp 0.8s ease-out;
+            font-size: 1.4rem; letter-spacing: 2px;
+            color: var(--muted); margin-bottom: 1rem;
+            display: flex; align-items: center; gap: .6rem;
         }
+        .section-title span { color: var(--primary); }
 
-        .hero p {
-            font-size: 1.3rem;
-            color: var(--text-muted);
-            max-width: 700px;
-            margin: 0 auto 3rem;
-            animation: fadeInUp 0.8s ease-out 0.2s backwards;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Tools Grid */
-        .tools-grid {
+        /* ── KPI grid ───────────────────────────────────────────────────── */
+        .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2rem;
-            margin-bottom: 4rem;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            gap: 1rem; margin-bottom: 2rem;
         }
-
-        .tool-card {
-            background: var(--card-bg);
-            border: 2px solid var(--border);
-            padding: 2.5rem;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.4s;
-            animation: fadeInUp 0.8s ease-out backwards;
+        .kpi {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem 1.25rem 1rem;
+            position: relative; overflow: hidden;
+            transition: transform .25s, border-color .25s;
         }
-
-        .tool-card:nth-child(1) { animation-delay: 0.3s; }
-        .tool-card:nth-child(2) { animation-delay: 0.4s; }
-        .tool-card:nth-child(3) { animation-delay: 0.5s; }
-        .tool-card:nth-child(4) { animation-delay: 0.6s; }
-
-        .tool-card::before {
+        .kpi:hover { transform: translateY(-3px); border-color: var(--primary); }
+        .kpi::after {
             content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 107, 53, 0.1), transparent);
-            transition: left 0.5s;
+            position: absolute; bottom: 0; left: 0;
+            width: 100%; height: 3px;
+            background: linear-gradient(90deg,var(--primary),var(--accent));
+            opacity: 0; transition: opacity .25s;
         }
-
-        .tool-card:hover::before {
-            left: 100%;
-        }
-
-        .tool-card:hover {
-            border-color: var(--primary);
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.2);
-        }
-
-        .tool-icon {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.5rem;
-            margin-bottom: 1.5rem;
-            clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
-        }
-
-        .tool-card h3 {
+        .kpi:hover::after { opacity: 1; }
+        .kpi-icon { font-size: 1.6rem; margin-bottom: .4rem; }
+        .kpi-value {
             font-family: 'Bebas Neue', sans-serif;
-            font-size: 2rem;
-            letter-spacing: 2px;
-            margin-bottom: 1rem;
-            color: var(--primary);
+            font-size: 2rem; letter-spacing: 1px; line-height: 1;
         }
-
-        .tool-card p {
-            color: var(--text-muted);
-            margin-bottom: 1.5rem;
-            font-size: 0.95rem;
+        .kpi-label {
+            font-size: .75rem; color: var(--muted);
+            text-transform: uppercase; letter-spacing: .8px; margin-top: .3rem;
         }
+        .kpi-sub { font-size: .75rem; color: var(--muted); margin-top: .2rem; }
+        .kpi.alert .kpi-value { color: var(--red); }
+        .kpi.good  .kpi-value { color: var(--green); }
+        .kpi.blue  .kpi-value { color: var(--blue); }
+        .kpi.warn  .kpi-value { color: var(--yellow); }
 
-        .btn {
+        /* ── Badge ──────────────────────────────────────────────────────── */
+        .badge {
             display: inline-block;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            color: white;
-            padding: 0.8rem 2rem;
-            text-decoration: none;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: all 0.3s;
-            border: none;
-            cursor: pointer;
-            font-size: 0.9rem;
+            padding: .15rem .45rem; border-radius: 20px;
+            font-size: .65rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: .5px;
+            margin-left: .4rem; vertical-align: middle;
+        }
+        .badge-red    { background: rgba(239,68,68,.15);  color: var(--red); }
+        .badge-green  { background: rgba(34,197,94,.15);  color: var(--green); }
+        .badge-orange { background: rgba(255,107,53,.15); color: var(--primary); }
+
+        /* ── Two-column content row ─────────────────────────────────────── */
+        .content-row {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 1.5rem; margin-bottom: 2rem;
+        }
+        @media(max-width:900px){ .content-row { grid-template-columns: 1fr; } }
+
+        /* ── Card shell ─────────────────────────────────────────────────── */
+        .card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 1.25rem;
+        }
+        .card-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 1rem;
+        }
+        .card-title {
+            font-size: .8rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px; color: var(--muted);
+        }
+        .view-all {
+            font-size: .75rem; color: var(--primary); text-decoration: none;
+            font-weight: 600; text-transform: uppercase; letter-spacing: .5px;
+        }
+        .view-all:hover { text-decoration: underline; }
+
+        /* ── Low-stock table ────────────────────────────────────────────── */
+        .stock-item {
+            display: flex; align-items: center; gap: .75rem;
+            padding: .55rem 0; border-bottom: 1px solid var(--border);
+        }
+        .stock-item:last-child { border-bottom: none; }
+        .stock-info { flex: 1; min-width: 0; }
+        .stock-name {
+            font-size: .85rem; font-weight: 600;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .stock-code { font-size: .72rem; color: var(--muted); }
+        .stock-qty { text-align: right; min-width: 80px; }
+        .stock-qty .val { font-size: .9rem; font-weight: 700; color: var(--red); }
+        .stock-qty .of  { font-size: .72rem; color: var(--muted); }
+        .prog-bar { height: 4px; background: var(--border); border-radius: 2px; margin-top: 4px; }
+        .prog-fill {
+            height: 100%; border-radius: 2px;
+            background: linear-gradient(90deg,var(--red),var(--yellow));
+            transition: width .6s ease;
+        }
+        .empty-state {
+            text-align: center; padding: 2rem 0; color: var(--muted); font-size: .85rem;
+        }
+        .empty-state span { font-size: 2rem; display: block; margin-bottom: .5rem; }
+
+        /* ── Activity feed ──────────────────────────────────────────────── */
+        .activity-item {
+            display: flex; align-items: flex-start; gap: .75rem;
+            padding: .6rem 0; border-bottom: 1px solid var(--border);
+        }
+        .activity-item:last-child { border-bottom: none; }
+        .act-icon {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: var(--card2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: .9rem; flex-shrink: 0;
+        }
+        .act-body { flex: 1; min-width: 0; }
+        .act-label {
+            font-size: .82rem; font-weight: 500;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .act-meta { display: flex; gap: .5rem; align-items: center; margin-top: 2px; }
+        .act-date { font-size: .7rem; color: var(--muted); }
+        .act-status {
+            font-size: .65rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: .5px;
+            padding: 1px 6px; border-radius: 3px;
+        }
+        .act-amount {
+            font-size: .82rem; font-weight: 700; color: var(--green);
+            white-space: nowrap; margin-left: auto; padding-left: .5rem;
         }
 
-        .btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 20px rgba(255, 107, 53, 0.4);
+        /* ── Chart containers ───────────────────────────────────────────── */
+        .chart-wrap { position: relative; height: 220px; }
+
+        /* ── Quick-action buttons ───────────────────────────────────────── */
+        .quick-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: .75rem; margin-bottom: 2rem;
+        }
+        .qa-btn {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: .9rem .75rem; text-align: center;
+            text-decoration: none; color: var(--text);
+            transition: all .2s; display: block;
+        }
+        .qa-btn:hover {
+            border-color: var(--primary);
+            background: rgba(255,107,53,.06);
+            transform: translateY(-2px);
+        }
+        .qa-btn .qa-icon { font-size: 1.5rem; display: block; margin-bottom: .35rem; }
+        .qa-btn .qa-label {
+            font-size: .75rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: .5px; color: var(--muted);
         }
 
-        /* Footer */
-        footer {
-            border-top: 2px solid var(--border);
-            padding: 3rem 0;
-            text-align: center;
-            margin-top: 4rem;
-        }
-
-        footer p {
-            color: var(--text-muted);
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                gap: 1rem;
-            }
-
-            nav ul {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-            }
-
-            .hero h2 {
-                font-size: 3rem;
-            }
-
-            .tools-grid {
-                grid-template-columns: 1fr;
-            }
+        /* ── Page footer ────────────────────────────────────────────────── */
+        .page-footer {
+            border-top: 1px solid var(--border);
+            padding: 1.5rem 0; text-align: center;
+            color: var(--muted); font-size: .78rem; margin-top: 2rem;
+            position: relative; z-index: 1;
         }
     </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <div class="logo-icon"></div>
-                    <h1>Factory Pro Tools</h1>
-                </div>
-                <nav>
-                    <ul>
-                        <li><a href="#tools">Tools</a></li>
-                        <li><a href="#features">Features</a></li>
-                        <li><a href="#contact">Contact</a></li>
-                        <li>
-                            <form th:action="@{/logout}" method="post" style="display: inline;">
-                                <button type="submit" style="background:none; border:none; color:var(--text); font-family:inherit; font-weight:600; text-transform:uppercase; font-size:0.9rem; letter-spacing:1px; cursor:pointer; padding:0; position:relative;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text)'">
-                                    <i class="fas fa-sign-out-alt"></i> Logout
-                                </button>
-                            </form>
-                        </li>
-                    </ul>
-                </nav>
+
+<!-- ══ TOP NAV ══════════════════════════════════════════════════════════ -->
+<header class="topbar">
+    <div class="topbar-left">
+        <div class="logo-hex"></div>
+        <span class="site-name">Factory Pro</span>
+    </div>
+    <div class="topbar-right">
+        <span style="color: var(--muted); font-size: 0.82rem; display: inline-flex; align-items: center; gap: 0.35rem; margin-right: 0.5rem;" sec:authorize="isAuthenticated()">
+            👤 <span sec:authentication="name" style="color: var(--primary); font-weight: 600; text-transform: uppercase;"></span>
+            <span sec:authorize="hasRole('ADMIN')" class="badge badge-red" style="margin: 0; padding: 0.15rem 0.45rem;">ADMIN</span>
+            <span sec:authorize="hasRole('STAFF')" class="badge badge-orange" style="margin: 0; padding: 0.15rem 0.45rem;">STAFF</span>
+        </span>
+        <a href="/inventory"        class="nav-link">Inventory</a>
+        <a href="/quotations-list"  class="nav-link">Quotations</a>
+        <a href="/bills"            class="nav-link">Bills</a>
+        <a href="/sales-orders"     class="nav-link">Orders</a>
+        <a href="/customers"        class="nav-link">Customers</a>
+        <a href="/suppliers"        class="nav-link">Suppliers</a>
+        <form th:action="@{/logout}" method="post" style="display:inline">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            <button type="submit" class="logout-btn" id="logout-btn">⏻ Logout</button>
+        </form>
+    </div>
+</header>
+
+<!-- ══ PAGE CONTENT ═════════════════════════════════════════════════════ -->
+<main class="page">
+
+    <!-- Page heading -->
+    <div style="margin-bottom:1.75rem; display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:1rem;">
+        <div>
+            <h1 style="font-family:'Bebas Neue',sans-serif; font-size:2.2rem; letter-spacing:3px; background:linear-gradient(90deg,var(--primary),var(--accent)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">
+                Dashboard
+            </h1>
+            <p style="color:var(--muted); font-size:.85rem; margin-top:.2rem;">
+                Overview for <span th:text="${currentMonth}" style="color:var(--text); font-weight:600"></span>
+                &nbsp;·&nbsp; Logged in as
+                <span sec:authentication="name" style="color:var(--primary); font-weight:600"></span>
+            </p>
+        </div>
+    </div>
+
+    <!-- ── KPI CARDS ──────────────────────────────────────────────────── -->
+    <div class="kpi-grid">
+
+        <!-- Revenue this month -->
+        <div class="kpi good">
+            <div class="kpi-icon">💰</div>
+            <div class="kpi-value">
+                ₹<span th:text="${#numbers.formatDecimal(revenueThisMonth, 0, 'COMMA', 0, 'POINT')}"></span>
+            </div>
+            <div class="kpi-label">Revenue (This Month)</div>
+            <div class="kpi-sub" th:text="${billsThisMonth} + ' bills generated'"></div>
+        </div>
+
+        <!-- Pending Quotations -->
+        <div th:class="${pendingQuotations > 0} ? 'kpi warn' : 'kpi'">
+            <div class="kpi-icon">📋</div>
+            <div class="kpi-value" th:text="${pendingQuotations}"></div>
+            <div class="kpi-label">Pending Quotations</div>
+            <div class="kpi-sub">
+                <a href="/quotations-list" style="color:var(--primary); font-size:.75rem;">View all →</a>
             </div>
         </div>
-    </header>
 
-    <main>
-        <div class="container">
-            <section class="hero">
-                <h2>Precision Tools for<br>Modern Manufacturing</h2>
-                <p>Streamline your furniture manufacturing process with our suite of professional-grade tools designed for efficiency and precision</p>
-            </section>
-
-            <section id="tools" class="tools-grid">
-                <!-- Tool 1: Plywood Optimizer -->
-                <div class="tool-card">
-                    <div class="tool-icon">📐</div>
-                    <h3>Plywood Optimizer</h3>
-                    <p>Advanced cutting optimization using MaxRect algorithm with real-time visualization and material waste minimization</p>
-                    <a href="/optimizer" class="btn">Launch Tool</a>
-                </div>
-
-                <!-- Tool 2: Quotation Maker -->
-                <div class="tool-card">
-                    <div class="tool-icon">💰</div>
-                    <h3>Quotation Maker</h3>
-                    <p>Professional quotation generation with customizable templates, pricing calculator, and PDF export capabilities</p>
-                    <a href="/quotation" class="btn">Launch Tool</a>
-                </div>
-				<!-- Tool 7: QT list Management -->
-											  				<div class="tool-card">
-											  				    <div class="tool-icon">👥</div>
-											  				    <h3>Quotation List</h3>
-											  				    <p>Track Quotation List</p>
-											  				    <a href="/quotations-list" class="btn">Launch Tool</a>
-											  				</div>
-
-                <!-- Tool 3: Bill Maker -->
-                <div class="tool-card">
-                    <div class="tool-icon">🧾</div>
-                    <h3>Bill Maker</h3>
-                    <p>Generate professional invoices and bills with automated GST calculations, payment tracking, and print formats</p>
-                    <a href="/bill" class="btn">Launch Tool</a>
-                </div>
-
-                <!-- Tool 3b: Bills List -->
-                <div class="tool-card">
-                    <div class="tool-icon">📑</div>
-                    <h3>Bills & Invoices</h3>
-                    <p>View all saved invoices, track payment status (Draft / Paid / Overdue), and manage your complete billing history</p>
-                    <a href="/bills" class="btn">View Bills</a>
-                </div>
-
-                <!-- Tool 4: Inventory Management -->
-                <div class="tool-card">
-                    <div class="tool-icon">📦</div>
-                    <h3>Inventory Management</h3>
-                    <p>Track stock levels, manage products, monitor movements with real-time alerts and comprehensive reporting dashboard</p>
-                    <a href="/inventory" class="btn">Launch Tool</a>
-                </div>
-
-                <!-- Tool 4a: Barcode Printing -->
-                <div class="tool-card">
-                    <div class="tool-icon">🏷️</div>
-                    <h3>Print Barcodes</h3>
-                    <p>Generate, view, and print high-quality barcodes and QR codes for all inventory products individually or in bulk</p>
-                    <a href="/barcode/print" class="btn">Launch Tool</a>
-                </div>
-
-                <!-- Tool 4b: Mobile Barcode Scan -->
-                <div class="tool-card">
-                    <div class="tool-icon">📷</div>
-                    <h3>Scan & Update Stock</h3>
-                    <p>Perform rapid mobile camera scans to decode product barcodes/QR codes and perform instant Stock IN or Stock OUT adjustments</p>
-                    <a href="/barcode/scan" class="btn">Launch Tool</a>
-                </div>
-				
-				<!--supplier and Purchaseorder-->
-				<div class="tool-card">
-				                  <div class="tool-icon">🤝</div>
-				                  <h3>Supplier Management</h3>
-				                  <p>Manage supplier relationships, track credit limits, monitor outstanding balances, and maintain vendor database</p>
-				                  <a href="/suppliers" class="btn">Launch Tool</a>
-				              </div>
-
-				              <div class="tool-card">
-				                  <div class="tool-icon">🛒</div>
-				                  <h3>Purchase Orders</h3>
-				                  <p>Create and manage purchase orders with approval workflow, delivery tracking, and automatic inventory updates</p>
-				                  <a href="/purchase-orders" class="btn">Launch Tool</a>
-				              </div>
-							  
-							  <!-- Tool 7: Customer Management -->
-							  				<div class="tool-card">
-							  				    <div class="tool-icon">👥</div>
-							  				    <h3>Customer Management</h3>
-							  				    <p>Track customer data, monitor outstanding payments, manage order history, and analyze sales performance</p>
-							  				    <a href="/customers" class="btn">Launch Tool</a>
-							  				</div>
-											
-											
-											<!-- Tool 8: Sales Order -->
-											<div class="tool-card">
-											    <div class="tool-icon">📋</div>
-											    <h3>Sales Order</h3>
-											    <p>Create and manage sales orders, track order status, link with quotations, and automatically update inventory and billing records</p>
-											    <a href="/sales-orders" class="btn">Launch Tool</a>
-											</div>
-            </section>
+        <!-- Active Sales Orders -->
+        <div th:class="${pendingSalesOrders > 0} ? 'kpi blue' : 'kpi'">
+            <div class="kpi-icon">🛒</div>
+            <div class="kpi-value" th:text="${pendingSalesOrders}"></div>
+            <div class="kpi-label">Active Sales Orders</div>
+            <div class="kpi-sub">
+                <a href="/sales-orders" style="color:var(--primary); font-size:.75rem;">View all →</a>
+            </div>
         </div>
-    </main>
 
-    <footer>
-        <div class="container">
-            <p>&copy; 2026 Factory Pro Tools. All rights reserved. | Furniture Manufacturing Solutions</p>
+        <!-- Total Products -->
+        <div class="kpi">
+            <div class="kpi-icon">📦</div>
+            <div class="kpi-value" th:text="${totalProducts}"></div>
+            <div class="kpi-label">Products in System</div>
+            <div class="kpi-sub">
+                <a href="/inventory" style="color:var(--primary); font-size:.75rem;">Manage →</a>
+            </div>
         </div>
-    </footer>
+
+        <!-- Low Stock -->
+        <div th:class="${lowStockCount > 0} ? 'kpi alert' : 'kpi good'">
+            <div class="kpi-icon">⚠️</div>
+            <div class="kpi-value" th:text="${lowStockCount}"></div>
+            <div class="kpi-label">Low Stock Items
+                <span th:if="${lowStockCount > 0}" class="badge badge-red">Alert</span>
+            </div>
+            <div class="kpi-sub" th:text="${outOfStockCount} + ' out of stock'"></div>
+        </div>
+
+        <!-- Inventory Value -->
+        <div class="kpi blue">
+            <div class="kpi-icon">🏭</div>
+            <div class="kpi-value">
+                ₹<span th:text="${#numbers.formatDecimal(totalInventoryValue / 1000, 0, 'COMMA', 1, 'POINT')}"></span>K
+            </div>
+            <div class="kpi-label">Inventory Value</div>
+            <div class="kpi-sub">Cost price basis</div>
+        </div>
+
+        <!-- Active Customers -->
+        <div class="kpi">
+            <div class="kpi-icon">👥</div>
+            <div class="kpi-value" th:text="${activeCustomers}"></div>
+            <div class="kpi-label">Active Customers</div>
+            <div class="kpi-sub">
+                <a href="/customers" style="color:var(--primary); font-size:.75rem;">View all →</a>
+            </div>
+        </div>
+
+    </div><!-- /kpi-grid -->
+
+    <!-- ── QUICK ACTIONS ──────────────────────────────────────────────── -->
+    <p class="section-title">⚡ <span>Quick</span> Actions</p>
+    <div class="quick-grid">
+        <a href="/quotation"       class="qa-btn" id="qa-new-quotation"><span class="qa-icon">📋</span><span class="qa-label">New Quotation</span></a>
+        <a href="/bill"            class="qa-btn" id="qa-new-bill"><span class="qa-icon">🧾</span><span class="qa-label">New Bill</span></a>
+        <a href="/optimizer"       class="qa-btn" id="qa-optimizer"><span class="qa-icon">📐</span><span class="qa-label">Optimizer</span></a>
+        <a href="/inventory"       class="qa-btn" id="qa-inventory"><span class="qa-icon">📦</span><span class="qa-label">Inventory</span></a>
+        <a href="/inventory/reports" class="qa-btn" id="qa-reports"><span class="qa-icon">📊</span><span class="qa-label">Reports</span></a>
+        <a href="/barcode/scan"    class="qa-btn" id="qa-scan"><span class="qa-icon">📷</span><span class="qa-label">Scan Stock</span></a>
+        <a href="/barcode/print"   class="qa-btn" id="qa-print-barcode"><span class="qa-icon">🏷️</span><span class="qa-label">Print Barcodes</span></a>
+        <a href="/purchase-orders" class="qa-btn" id="qa-purchase-order"><span class="qa-icon">🛒</span><span class="qa-label">Purchase Order</span></a>
+        <a href="/suppliers"       class="qa-btn" id="qa-suppliers"><span class="qa-icon">🤝</span><span class="qa-label">Suppliers</span></a>
+    </div>
+
+    <!-- ── CHARTS ROW ─────────────────────────────────────────────────── -->
+    <p class="section-title">📊 <span>Analytics</span></p>
+    <div class="content-row">
+
+        <!-- Monthly Revenue Bar Chart -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Revenue Trend — Last 6 Months</span>
+            </div>
+            <div class="chart-wrap">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Quotation Status Donut -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Quotation Status Breakdown</span>
+            </div>
+            <div class="chart-wrap">
+                <canvas id="quotationChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ── ALERTS + ACTIVITY ROW ──────────────────────────────────────── -->
+    <p class="section-title">🔔 <span>Live</span> Data</p>
+    <div class="content-row">
+
+        <!-- Low Stock Alerts -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">⚠️ Low Stock Alerts</span>
+                <a href="/inventory" class="view-all">View inventory →</a>
+            </div>
+
+            <div th:if="${#lists.isEmpty(lowStockAlerts)}" class="empty-state">
+                <span>✅</span>All stock levels are healthy!
+            </div>
+
+            <div th:each="item : ${lowStockAlerts}" class="stock-item">
+                <div style="font-size:1.3rem">📦</div>
+                <div class="stock-info">
+                    <div class="stock-name" th:text="${item.name}"></div>
+                    <div class="stock-code" th:text="${item.code}"></div>
+                    <div class="prog-bar">
+                        <div class="prog-fill" th:style="'width:' + ${item.pct} + '%'"></div>
+                    </div>
+                </div>
+                <div class="stock-qty">
+                    <div class="val" th:text="${item.current} + ' ' + ${item.unit}"></div>
+                    <div class="of">min <span th:text="${item.minimum}"></span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity Feed -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">🕐 Recent Activity</span>
+            </div>
+
+            <div th:if="${#lists.isEmpty(recentActivity)}" class="empty-state">
+                <span>📭</span>No recent activity found.
+            </div>
+
+            <div th:each="event : ${recentActivity}" class="activity-item">
+                <div class="act-icon" th:text="${event.icon}"></div>
+                <div class="act-body">
+                    <div class="act-label" th:text="${event.label}"></div>
+                    <div class="act-meta">
+                        <span class="act-date"  th:text="${event.date}"></span>
+                        <span class="act-status"
+                              th:text="${event.status}"
+                              th:style="'background:' + ${event.color} + '22; color:' + ${event.color}">
+                        </span>
+                    </div>
+                </div>
+                <div class="act-amount"
+                     th:if="${event.amount != null and event.amount > 0}"
+                     th:text="'₹' + ${#numbers.formatDecimal(event.amount, 0, 'COMMA', 0, 'POINT')}">
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /content-row -->
+
+</main>
+
+<footer class="page-footer">
+    &copy; 2026 Factory Pro Tools &nbsp;·&nbsp; Plywood Manufacturing Management System
+</footer>
+
+<!-- ══ CHART SCRIPTS ════════════════════════════════════════════════════ -->
+<script th:inline="javascript">
+/*<![CDATA[*/
+
+// ── Revenue trend bar chart ──────────────────────────────────────────────
+const trendLabels  = /*[[${trendLabels}]]*/ [];
+const trendRevenue = /*[[${trendRevenue}]]*/ [];
+
+new Chart(document.getElementById('revenueChart'), {
+    type: 'bar',
+    data: {
+        labels: trendLabels,
+        datasets: [{
+            label: 'Revenue (₹)',
+            data: trendRevenue,
+            backgroundColor: 'rgba(255,107,53,0.25)',
+            borderColor: '#ff6b35',
+            borderWidth: 2,
+            borderRadius: 4,
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.05)' },
+                 ticks: { color: '#888', font: { size: 11 } } },
+            y: { grid: { color: 'rgba(255,255,255,0.05)' },
+                 ticks: { color: '#888', font: { size: 11 },
+                          callback: v => '₹' + (v >= 1000 ? (v/1000).toFixed(0)+'K' : v) } }
+        }
+    }
+});
+
+// ── Quotation status donut ───────────────────────────────────────────────
+const qLabels = /*[[${quotationStatusLabels}]]*/ [];
+const qData   = /*[[${quotationStatusData}]]*/ [];
+
+new Chart(document.getElementById('quotationChart'), {
+    type: 'doughnut',
+    data: {
+        labels: qLabels,
+        datasets: [{
+            data: qData,
+            backgroundColor: ['#f97316','#3b82f6','#22c55e','#ef4444','#888','#a855f7'],
+            borderWidth: 0,
+            hoverOffset: 8
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        cutout: '65%',
+        plugins: {
+            legend: {
+                position: 'right',
+                labels: { color: '#aaa', font: { size: 11 }, boxWidth: 12, padding: 12 }
+            }
+        }
+    }
+});
+
+/*]]>*/
+</script>
 </body>
 </html>

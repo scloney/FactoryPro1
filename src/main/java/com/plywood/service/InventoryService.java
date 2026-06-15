@@ -31,6 +31,17 @@ public class InventoryService {
     
     @Autowired
     private StockMovementRepository stockMovementRepository;
+
+    @Autowired
+    private com.plywood.repository.BillRepository billRepository;
+
+    public com.plywood.repository.BillRepository getBillRepository() {
+        return billRepository;
+    }
+
+    public org.springframework.data.domain.Page<Product> getAllProducts(org.springframework.data.domain.Pageable pageable) {
+        return productRepository.findAll(pageable);
+    }
     
     // Product Operations
     public Product createProduct(Product product) {

@@ -159,6 +159,10 @@ public class SalesOrderService {
     public List<SalesOrder> getAllOrders() {
         return salesOrderRepository.findAll();
     }
+
+    public org.springframework.data.domain.Page<SalesOrder> getAllOrders(org.springframework.data.domain.Pageable pageable) {
+        return salesOrderRepository.findAll(pageable);
+    }
     
     public Optional<SalesOrder> getOrderById(Long id) {
         return salesOrderRepository.findById(id);

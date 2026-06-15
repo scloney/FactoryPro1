@@ -12,6 +12,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
+@org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 public class SecurityConfig {
 
     @Bean
@@ -57,12 +58,31 @@ public class SecurityConfig {
             .csrf(csrf -> csrf
                 .ignoringRequestMatchers(
                     new AntPathRequestMatcher("/optimizer/**"),
-                    new AntPathRequestMatcher("/api/**")
+                    new AntPathRequestMatcher("/api/**"),
+                    // Many controllers expose REST endpoints under /<feature>/api/**
+                    // (e.g. /purchase-orders/api, /inventory/api, /suppliers/api,
+                    // /sales-orders/api, /bills/api). These are called via raw
+                    // fetch() without a CSRF token, so they must be exempted too.
+                    new AntPathRequestMatcher("/*/api/**"),
+                    // /bill/generate-pdf is called via raw fetch() (no CSRF token)
+                    // from bill.html, unlike /api/quotations/generate-pdf which is
+                    // already covered by /api/** above.
+                    new AntPathRequestMatcher("/bill/generate-pdf")
                 )
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login", "/register", "/css/**", "/js/**", "/api/*/send-whatsapp").permitAll()
+                .requestMatchers("/login", "/css/**", "/js/**", "/api/*/send-whatsapp").permitAll()
+                // Only ADMIN can register new users
+                .requestMatchers("/register").hasRole("ADMIN")
+                // Barcode features need authentication
                 .requestMatchers("/api/barcode/**", "/barcode/**").authenticated()
+                // STAFF can access all operational areas
+                .requestMatchers(
+                    "/", "/bills/**", "/quotations-list", "/quotation/**",
+                    "/sales-orders/**", "/inventory/**", "/customers/**",
+                    "/suppliers/**", "/purchase-orders/**", "/optimizer/**",
+                    "/inventory/reports", "/inventory/export/**"
+                ).hasAnyRole("ADMIN", "STAFF")
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

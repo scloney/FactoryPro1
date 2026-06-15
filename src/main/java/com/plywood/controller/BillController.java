@@ -125,8 +125,15 @@ public class BillController {
     /** List all bills */
     @GetMapping("/api/bills")
     @ResponseBody
-    public List<Bill> getAllBills() {
-        return billService.findAll();
+    public ResponseEntity<?> getAllBills(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
+        if (page != null && size != null) {
+            org.springframework.data.domain.Pageable pageable = 
+                org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by("createdDate").descending());
+            return ResponseEntity.ok(billService.findAll(pageable));
+        }
+        return ResponseEntity.ok(billService.findAll());
     }
 
     /** Get single bill */
@@ -141,6 +148,7 @@ public class BillController {
     /** Delete a bill */
     @DeleteMapping("/api/bills/{id}")
     @ResponseBody
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteBill(@PathVariable Long id) {
         billService.deleteBill(id);
         return ResponseEntity.noContent().build();
@@ -178,7 +186,12 @@ public class BillController {
             return ResponseEntity.ok().headers(headers).body(pdfBytes);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.internalServerError().build();
+            String message = "PDF generation failed: " +
+                    (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
+            byte[] errorBytes = message.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            return ResponseEntity.internalServerError()
+                    .contentType(MediaType.TEXT_PLAIN)
+                    .body(errorBytes);
         }
     }
 

@@ -23,7 +23,90 @@ public class BillPdfService {
     private static final Logger logger = LoggerFactory.getLogger(BillPdfService.class);
     private static final DecimalFormat df = new DecimalFormat("#,##0.00");
     private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd-MMM-yyyy");
-    
+
+    /**
+     * Makes arbitrary user-entered text safe to pass to PDPageContentStream.showText().
+     * PDType1Font.HELVETICA uses WinAnsiEncoding, which:
+     *  - has no glyph for characters like the Rupee sign (U+20B9), most emoji, or
+     *    Indic/CJK scripts -> showText() throws IllegalArgumentException
+     *  - has no glyph for control characters such as '\n' or '\r' -> showText()
+     *    throws IllegalArgumentException as well
+     * Either of these caused the whole PDF generation request to fail with a 500,
+     * which the browser then "downloaded" as a broken/empty PDF file.
+     * This method strips/replaces anything that would trigger that.
+     */
+    private static String sanitize(String text) {
+        if (text == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder(text.length());
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            switch (c) {
+                case '\n':
+                case '\r':
+                    sb.append(' ');
+                    break;
+                case '\u20B9': // ₹ Indian Rupee sign - not in WinAnsiEncoding
+                    sb.append("Rs.");
+                    break;
+                case '\u00A0': // non-breaking space
+                    sb.append(' ');
+                    break;
+                default:
+                    if (isWinAnsiPrintable(c)) {
+                        sb.append(c);
+                    } else {
+                        sb.append('?');
+                    }
+            }
+        }
+        return sb.toString();
+    }
+
+    /** True if c can be safely shown with PDType1Font's default WinAnsiEncoding. */
+    private static boolean isWinAnsiPrintable(char c) {
+        if (c >= 0x20 && c <= 0x7E) return true;   // ASCII printable
+        if (c >= 0xA0 && c <= 0xFF) return true;   // Latin-1 supplement (accented chars)
+        switch (c) {
+            case '\u2018': case '\u2019': case '\u201A': // smart single quotes
+            case '\u201C': case '\u201D': case '\u201E': // smart double quotes
+            case '\u2013': case '\u2014':                 // en dash, em dash
+            case '\u2020': case '\u2021': case '\u2022':  // dagger, double dagger, bullet
+            case '\u2026': case '\u2030':                 // ellipsis, per mille
+            case '\u2039': case '\u203A':                 // single angle quotes
+            case '\u20AC': case '\u2122':                 // euro, trademark
+            case '\u0192': case '\u02C6': case '\u02DC':  // florin, circumflex, tilde
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * Renders possibly multi-line text starting at (x, startY), one showText() call
+     * per line. Returns the y position after the last line.
+     */
+    private static float showMultilineText(PDPageContentStream contentStream, String text,
+                                             float x, float startY, float lineHeight) throws IOException {
+        if (text == null) {
+            return startY;
+        }
+        String normalized = text.replace("\r\n", "\n").replace('\r', '\n');
+        float y = startY;
+        for (String line : normalized.split("\n", -1)) {
+            String safeLine = sanitize(line);
+            if (!safeLine.isEmpty()) {
+                contentStream.beginText();
+                contentStream.newLineAtOffset(x, y);
+                contentStream.showText(safeLine);
+                contentStream.endText();
+            }
+            y -= lineHeight;
+        }
+        return y;
+    }
+
     public byte[] generatePdf(Bill bill) throws IOException {
         logger.info("Generating invoice PDF for bill: {}", bill.getBillNumber());
         PDDocument document = new PDDocument();
@@ -55,7 +138,7 @@ public class BillPdfService {
                     contentStream.setFont(PDType1Font.HELVETICA_BOLD, 14);
                     contentStream.beginText();
                     contentStream.newLineAtOffset(50, yPosition);
-                    contentStream.showText(bill.getCompanyName());
+                    contentStream.showText(sanitize(bill.getCompanyName()));
                     contentStream.endText();
                     yPosition -= 18;
                     
@@ -63,28 +146,28 @@ public class BillPdfService {
                     if (bill.getCompanyAddress() != null) {
                         contentStream.beginText();
                         contentStream.newLineAtOffset(50, yPosition);
-                        contentStream.showText(bill.getCompanyAddress());
+                        contentStream.showText(sanitize(bill.getCompanyAddress()));
                         contentStream.endText();
                         yPosition -= 12;
                     }
                     if (bill.getCompanyPhone() != null) {
                         contentStream.beginText();
                         contentStream.newLineAtOffset(50, yPosition);
-                        contentStream.showText("Phone: " + bill.getCompanyPhone());
+                        contentStream.showText(sanitize("Phone: " + bill.getCompanyPhone()));
                         contentStream.endText();
                         yPosition -= 12;
                     }
                     if (bill.getCompanyEmail() != null) {
                         contentStream.beginText();
                         contentStream.newLineAtOffset(50, yPosition);
-                        contentStream.showText("Email: " + bill.getCompanyEmail());
+                        contentStream.showText(sanitize("Email: " + bill.getCompanyEmail()));
                         contentStream.endText();
                         yPosition -= 12;
                     }
                     if (bill.getCompanyGSTIN() != null) {
                         contentStream.beginText();
                         contentStream.newLineAtOffset(50, yPosition);
-                        contentStream.showText("GSTIN: " + bill.getCompanyGSTIN());
+                        contentStream.showText(sanitize("GSTIN: " + bill.getCompanyGSTIN()));
                         contentStream.endText();
                         yPosition -= 12;
                     }
@@ -108,7 +191,7 @@ public class BillPdfService {
                 contentStream.setFont(PDType1Font.HELVETICA, 10);
                 contentStream.beginText();
                 contentStream.newLineAtOffset(440, boxY - 15);
-                contentStream.showText(bill.getBillNumber() != null ? bill.getBillNumber() : "");
+                contentStream.showText(sanitize(bill.getBillNumber()));
                 contentStream.endText();
                 
                 contentStream.setFont(PDType1Font.HELVETICA_BOLD, 10);
@@ -149,35 +232,35 @@ public class BillPdfService {
                 if (bill.getCustomerName() != null) {
                     contentStream.beginText();
                     contentStream.newLineAtOffset(50, yPosition);
-                    contentStream.showText(bill.getCustomerName());
+                    contentStream.showText(sanitize(bill.getCustomerName()));
                     contentStream.endText();
                     yPosition -= 12;
                 }
                 if (bill.getCustomerAddress() != null) {
                     contentStream.beginText();
                     contentStream.newLineAtOffset(50, yPosition);
-                    contentStream.showText(bill.getCustomerAddress());
+                    contentStream.showText(sanitize(bill.getCustomerAddress()));
                     contentStream.endText();
                     yPosition -= 12;
                 }
                 if (bill.getCustomerPhone() != null) {
                     contentStream.beginText();
                     contentStream.newLineAtOffset(50, yPosition);
-                    contentStream.showText("Phone: " + bill.getCustomerPhone());
+                    contentStream.showText(sanitize("Phone: " + bill.getCustomerPhone()));
                     contentStream.endText();
                     yPosition -= 12;
                 }
                 if (bill.getCustomerEmail() != null) {
                     contentStream.beginText();
                     contentStream.newLineAtOffset(50, yPosition);
-                    contentStream.showText("Email: " + bill.getCustomerEmail());
+                    contentStream.showText(sanitize("Email: " + bill.getCustomerEmail()));
                     contentStream.endText();
                     yPosition -= 12;
                 }
                 if (bill.getCustomerGSTIN() != null) {
                     contentStream.beginText();
                     contentStream.newLineAtOffset(50, yPosition);
-                    contentStream.showText("GSTIN: " + bill.getCustomerGSTIN());
+                    contentStream.showText(sanitize("GSTIN: " + bill.getCustomerGSTIN()));
                     contentStream.endText();
                     yPosition -= 12;
                 }
@@ -237,11 +320,8 @@ public class BillPdfService {
                 }
                 
                 // Grand total box
-                contentStream.setNonStrokingColor(new Color(52, 152, 219));
-                contentStream.addRect(totalsX - 10, yPosition - 25, 175, 30);
-                contentStream.fill();
                 
-                contentStream.setNonStrokingColor(Color.WHITE);
+                contentStream.setNonStrokingColor(Color.BLACK);
                 contentStream.setFont(PDType1Font.HELVETICA_BOLD, 13);
                 contentStream.beginText();
                 contentStream.newLineAtOffset(totalsX, yPosition - 8);
@@ -268,14 +348,14 @@ public class BillPdfService {
                     if (bill.getPaymentTerms() != null) {
                         contentStream.beginText();
                         contentStream.newLineAtOffset(50, yPosition);
-                        contentStream.showText("Terms: " + bill.getPaymentTerms());
+                        contentStream.showText(sanitize("Terms: " + bill.getPaymentTerms()));
                         contentStream.endText();
                         yPosition -= 12;
                     }
                     if (bill.getBankDetails() != null) {
                         contentStream.beginText();
                         contentStream.newLineAtOffset(50, yPosition);
-                        contentStream.showText("Bank Details: " + bill.getBankDetails());
+                        contentStream.showText(sanitize("Bank Details: " + bill.getBankDetails()));
                         contentStream.endText();
                         yPosition -= 12;
                     }
@@ -292,10 +372,10 @@ public class BillPdfService {
                     yPosition -= 15;
                     
                     contentStream.setFont(PDType1Font.HELVETICA, 9);
-                    contentStream.beginText();
-                    contentStream.newLineAtOffset(50, yPosition);
-                    contentStream.showText(bill.getNotes());
-                    contentStream.endText();
+                    // Notes is a <textarea>, so it may contain newlines. PDFBox's
+                    // showText() throws on raw '\n', which used to crash PDF
+                    // generation entirely. Render each line separately instead.
+                    yPosition = showMultilineText(contentStream, bill.getNotes(), 50, yPosition, 12);
                 }
 
                 // Source quotation footer
@@ -305,7 +385,7 @@ public class BillPdfService {
                     contentStream.setNonStrokingColor(new Color(150, 150, 150));
                     contentStream.beginText();
                     contentStream.newLineAtOffset(50, yPosition);
-                    contentStream.showText("Generated from Quotation: " + bill.getSourceQuotationNumber());
+                    contentStream.showText(sanitize("Generated from Quotation: " + bill.getSourceQuotationNumber()));
                     contentStream.endText();
                     contentStream.setNonStrokingColor(Color.BLACK);
                 }
@@ -344,11 +424,13 @@ public class BillPdfService {
     private void drawTableRow(PDPageContentStream contentStream, float yPosition, int itemNumber, BillItem item) throws IOException {
         contentStream.setFont(PDType1Font.HELVETICA, 9);
         
+        double unitPrice = item.getUnitPrice() != null ? item.getUnitPrice() : 0.0;
+
         contentStream.beginText(); contentStream.newLineAtOffset(55, yPosition); contentStream.showText(String.valueOf(itemNumber)); contentStream.endText();
-        contentStream.beginText(); contentStream.newLineAtOffset(85, yPosition); contentStream.showText(item.getDescription() != null ? item.getDescription() : ""); contentStream.endText();
-        contentStream.beginText(); contentStream.newLineAtOffset(310, yPosition); contentStream.showText(String.valueOf(item.getQuantity())); contentStream.endText();
-        contentStream.beginText(); contentStream.newLineAtOffset(360, yPosition); contentStream.showText(item.getUnit() != null ? item.getUnit() : ""); contentStream.endText();
-        contentStream.beginText(); contentStream.newLineAtOffset(410, yPosition); contentStream.showText("Rs. " + df.format(item.getUnitPrice())); contentStream.endText();
+        contentStream.beginText(); contentStream.newLineAtOffset(85, yPosition); contentStream.showText(sanitize(item.getDescription())); contentStream.endText();
+        contentStream.beginText(); contentStream.newLineAtOffset(310, yPosition); contentStream.showText(item.getQuantity() != null ? String.valueOf(item.getQuantity()) : "0"); contentStream.endText();
+        contentStream.beginText(); contentStream.newLineAtOffset(360, yPosition); contentStream.showText(sanitize(item.getUnit())); contentStream.endText();
+        contentStream.beginText(); contentStream.newLineAtOffset(410, yPosition); contentStream.showText("Rs. " + df.format(unitPrice)); contentStream.endText();
         contentStream.beginText(); contentStream.newLineAtOffset(485, yPosition); contentStream.showText("Rs. " + df.format(item.getTotal())); contentStream.endText();
         
         contentStream.setStrokingColor(new Color(220, 220, 220));

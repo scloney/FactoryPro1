@@ -93,6 +93,24 @@ public class PurchaseOrderController {
         return ResponseEntity.ok(po);
     }
     
+    @GetMapping("/api/number/{poNumber}")
+    @ResponseBody
+    public ResponseEntity<?> getPurchaseOrderByNumber(@PathVariable String poNumber) {
+        PurchaseOrder po = purchaseOrderService.getPurchaseOrderByNumber(poNumber);
+        if (po == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(po);
+    }
+
+    // POs that contain a line item for the given product — used to populate the
+    // "PO Reference" dropdown in Inventory > Add Stock.
+    @GetMapping("/api/product/{productId}")
+    @ResponseBody
+    public ResponseEntity<List<PurchaseOrder>> getPurchaseOrdersByProduct(@PathVariable Long productId) {
+        return ResponseEntity.ok(purchaseOrderService.getPurchaseOrdersByProductId(productId));
+    }
+    
     @GetMapping("/api")
     @ResponseBody
     public ResponseEntity<List<PurchaseOrder>> getAllPurchaseOrders() {

@@ -87,4 +87,19 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<String> findAllLocations();
     
     List<Product> findByCategoryAndActiveTrue(String category);
+
+    // ── Dashboard: total active/inactive product count ───────────────────
+    long countByActive(boolean active);
+
+    // ── Reorder-point queries (Feature 2) ────────────────────────────────
+    /** Products whose stock has fallen to/below the reorder trigger. */
+    @Query("SELECT p FROM Product p WHERE p.reorderLevel > 0 AND p.currentStock <= p.reorderLevel AND p.active = true ORDER BY (p.currentStock / p.reorderLevel) ASC")
+    List<Product> findProductsBelowReorderLevel();
+
+    @Query("SELECT COUNT(p) FROM Product p WHERE p.reorderLevel > 0 AND p.currentStock <= p.reorderLevel AND p.active = true")
+    Long countReorderNeeded();
+
+    // ── Reports: top products by stock value ─────────────────────────────
+    @Query("SELECT p FROM Product p WHERE p.active = true ORDER BY (p.currentStock * p.costPrice) DESC")
+    List<Product> findTopByStockValue();
 }

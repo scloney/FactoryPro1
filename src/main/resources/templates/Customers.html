@@ -1,24 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Customer Management | Factory Pro Tools</title>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --primary: #ff6b35;
-            --secondary: #1a1a1a;
-            --accent: #f7931e;
-            --bg: #0a0a0a;
-            --card-bg: #1a1a1a;
-            --text: #e0e0e0;
-            --text-muted: #888;
-            --border: #333;
-            --success: #38ef7d;
-            --warning: #f7931e;
-            --danger: #ff6b35;
+            --primary:   #ff6b35;
+            --accent:    #f7931e;
+            --bg:        #0a0a0a;
+            --surface:   #141414;
+            --card:      #1a1a1a;
+            --card2:     #1f1f1f;
+            --border:    #2a2a2a;
+            --text:      #e0e0e0;
+            --muted:     #888;
+            --green:     #22c55e;
+            --red:       #ef4444;
+            --blue:      #3b82f6;
+            --yellow:    #eab308;
+            --radius:    6px;
         }
 
         * {
@@ -44,8 +47,8 @@
             width: 100%;
             height: 100%;
             background-image: 
-                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 107, 53, 0.03) 2px, rgba(255, 107, 53, 0.03) 4px),
-                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255, 107, 53, 0.03) 2px, rgba(255, 107, 53, 0.03) 4px);
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 107, 53, 0.025) 2px, rgba(255, 107, 53, 0.025) 4px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255, 107, 53, 0.025) 2px, rgba(255, 107, 53, 0.025) 4px);
             pointer-events: none;
             z-index: 0;
         }
@@ -58,22 +61,7 @@
             z-index: 1;
         }
 
-        /* Header */
-        header {
-            padding: 1.5rem 0;
-            border-bottom: 2px solid var(--border);
-            background: rgba(26, 26, 26, 0.95);
-            backdrop-filter: blur(10px);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        /* Unified topbar styles */
 
         .page-title {
             display: flex;
@@ -202,13 +190,7 @@
             margin-bottom: 2rem;
         }
 
-        .content-header {
-            padding: 1.5rem 2rem;
-            border-bottom: 2px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .content-
 
         .content-header h2 {
             font-family: 'Bebas Neue', sans-serif;
@@ -358,14 +340,7 @@
             margin: 2rem;
         }
 
-        .modal-header {
-            padding: 1.5rem 2rem;
-            border-bottom: 2px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: linear-gradient(135deg, rgba(255, 107, 53, 0.1), rgba(247, 147, 30, 0.1));
-        }
+        .modal-
 
         .modal-header h3 {
             font-family: 'Bebas Neue', sans-serif;
@@ -453,69 +428,163 @@
             }
         }
 
-        /* Unified Navigation Styles */
-        .nav-buttons {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-            align-items: center;
+        /* ── Top nav ────────────────────────────────────────────────────── */
+        .topbar {
+            background: rgba(20,20,20,.96);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(12px);
+            position: sticky; top: 0; z-index: 200;
+            padding: 0 2rem;
+            height: 60px;
+            display: flex; align-items: center; justify-content: space-between;
         }
-
-        .nav-btn {
-            display: inline-block;
-            padding: 0.6rem 1rem;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: var(--text, #e0e0e0) !important;
-            text-decoration: none;
-            font-weight: 600;
+        .topbar-left { display: flex; align-items: center; gap: .75rem; }
+        .logo-hex {
+            width: 34px; height: 34px;
+            background: linear-gradient(135deg,var(--primary),var(--accent));
+            clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+            animation: spin 20s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .site-name {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem; letter-spacing: 2px;
+            background: linear-gradient(90deg,var(--primary),var(--accent));
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .topbar-right { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+        .nav-link {
+            color: var(--muted); text-decoration: none;
+            font-size: .82rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: .8px;
+            transition: color .2s;
+        }
+        .nav-link:hover, .nav-link.active { color: var(--primary); }
+        .logout-btn {
+            background: none; border: 1px solid var(--border);
+            color: var(--muted); cursor: pointer;
+            font-family: inherit; font-size: .82rem;
+            font-weight: 600; letter-spacing: .8px;
             text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.5px;
-            border-radius: 4px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: .35rem .9rem; border-radius: var(--radius);
+            transition: all .2s;
         }
-
-        .nav-btn:hover {
-            background: linear-gradient(135deg, var(--primary, #ff6b35), var(--accent, #f7931e));
-            color: white !important;
-            border-color: transparent;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+        .logout-btn:hover { border-color: var(--primary); color: var(--primary); }
+    
+        /* ── Unified button system (dashboard-consistent) ──────────────────── */
+        .btn {
+            display: inline-flex; align-items: center; gap: .4rem;
+            padding: .45rem 1rem;
+            border-radius: var(--radius);
+            font-family: 'Work Sans', sans-serif;
+            font-size: .8rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: .6px;
+            cursor: pointer; text-decoration: none;
+            border: 1px solid transparent;
+            transition: all .2s;
+            white-space: nowrap;
         }
-
-        .nav-btn.active {
-            background: linear-gradient(135deg, var(--primary, #ff6b35), var(--accent, #f7931e));
-            color: white !important;
-            border-color: transparent;
-            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.2);
-            pointer-events: none;
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: #fff; border-color: transparent;
         }
-    </style>
-</head>
-<body>
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="page-title">
-                    <div class="page-icon"><i class="fas fa-users"></i></div>
-                    <h1>Customer Management</h1>
-                </div>
-                <div class="nav-buttons">
-                    <a href="/" class="nav-btn" title="Home">Home</a>
-                    <a href="/optimizer" class="nav-btn" title="Plywood Optimizer">Optimizer</a>
-                    <a href="/quotations-list" class="nav-btn" title="Quotations List">Quotations</a>
-                    <a href="/sales-orders" class="nav-btn" title="Sales Orders">Sales Orders</a>
-                    <a href="/bills" class="nav-btn" title="Bills List">Bills</a>
-                    <a href="/inventory" class="nav-btn" title="Inventory Management">Inventory</a>
-                    <a href="/suppliers" class="nav-btn" title="Supplier Management">Suppliers</a>
-                    <a href="/purchase-orders" class="nav-btn" title="Purchase Orders">Purchase Orders</a>
-                    <a href="/customers" class="nav-btn active" title="Customer Management">Customers</a>
-                    <a href="/barcode/print" class="nav-btn" title="Print Barcodes">Barcode Print</a>
-                    <a href="/barcode/scan" class="nav-btn" title="Scan &amp; Update Stock">Barcode Scan</a>
-                </div>
-            </div>
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(255,107,53,.35); }
+        .btn-success {
+            background: rgba(34,197,94,.12); color: var(--green);
+            border-color: rgba(34,197,94,.3);
+        }
+        .btn-success:hover { background: rgba(34,197,94,.22); border-color: var(--green); }
+        .btn-danger {
+            background: rgba(239,68,68,.12); color: var(--red);
+            border-color: rgba(239,68,68,.3);
+        }
+        .btn-danger:hover { background: rgba(239,68,68,.22); border-color: var(--red); }
+        .btn-warning {
+            background: rgba(234,179,8,.12); color: var(--yellow);
+            border-color: rgba(234,179,8,.3);
+        }
+        .btn-warning:hover { background: rgba(234,179,8,.22); border-color: var(--yellow); }
+        .btn-secondary {
+            background: rgba(255,255,255,.05); color: var(--muted);
+            border-color: var(--border);
+        }
+        .btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-info {
+            background: rgba(59,130,246,.12); color: var(--blue);
+            border-color: rgba(59,130,246,.3);
+        }
+        .btn-info:hover { background: rgba(59,130,246,.22); border-color: var(--blue); }
+        .btn-sm { padding: .28rem .65rem; font-size: .72rem; }
+        .btn-lg { padding: .65rem 1.4rem; font-size: .9rem; }
+        /* ── Cards (dashboard-consistent) ──────────────────────────────────── */
+        .card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 1.25rem;
+            transition: border-color .25s;
+        }
+        .card:hover { border-color: rgba(255,107,53,.3); }
+        .card-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 1rem; padding-bottom: .75rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .card-title {
+            font-size: .8rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px; color: var(--muted);
+        }
+        /* ── Tables (dashboard-consistent) ─────────────────────────────────── */
+        table { width: 100%; border-collapse: collapse; }
+        thead th {
+            background: var(--surface);
+            padding: .65rem .9rem;
+            font-size: .72rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: .8px; color: var(--muted);
+            border-bottom: 1px solid var(--border); text-align: left;
+        }
+        tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: rgba(255,255,255,.025); }
+        tbody td { padding: .65rem .9rem; font-size: .85rem; vertical-align: middle; }
+        /* ── Badges ─────────────────────────────────────────────────────────── */
+        .badge {
+            display: inline-block; padding: .15rem .5rem; border-radius: 20px;
+            font-size: .65rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: .5px;
+        }
+        .badge-red, .badge-danger   { background: rgba(239,68,68,.15);  color: var(--red); }
+        .badge-green, .badge-success{ background: rgba(34,197,94,.15);  color: var(--green); }
+        .badge-orange, .badge-warning{ background: rgba(255,107,53,.15); color: var(--primary); }
+        .badge-blue, .badge-info    { background: rgba(59,130,246,.15);  color: var(--blue); }
+        .badge-yellow               { background: rgba(234,179,8,.15);   color: var(--yellow); }
+        .badge-muted                { background: rgba(136,136,136,.15); color: var(--muted); }
+        /* ── Page wrapper ───────────────────────────────────────────────────── */
+        .page { max-width: 1400px; margin: 0 auto; padding: 2rem; position: relative; z-index: 1; }</style></head>
+        <header class="topbar">
+        <div class="topbar-left">
+            <div class="logo-hex"></div>
+            <span class="site-name">Factory Pro</span>
+        </div>
+        <div class="topbar-right">
+            <span style="color: var(--muted); font-size: 0.82rem; display: inline-flex; align-items: center; gap: 0.35rem; margin-right: 0.5rem;" sec:authorize="isAuthenticated()">
+                👤 <span sec:authentication="name" style="color: var(--primary); font-weight: 600; text-transform: uppercase;"></span>
+                <span sec:authorize="hasRole('ADMIN')" class="badge badge-red" style="margin: 0; padding: 0.15rem 0.45rem; background: var(--red); color: white;">ADMIN</span>
+                <span sec:authorize="hasRole('STAFF')" class="badge badge-orange" style="margin: 0; padding: 0.15rem 0.45rem; background: var(--primary); color: white;">STAFF</span>
+            </span>
+            <a href="/"                 class="nav-link">Dashboard</a>
+            <a href="/inventory"        class="nav-link">Inventory</a>
+            <a href="/quotations-list"  class="nav-link">Quotations</a>
+            <a href="/bills"            class="nav-link">Bills</a>
+            <a href="/sales-orders"     class="nav-link">Orders</a>
+            <a href="/purchase-orders"  class="nav-link">PO</a>
+            <a href="/customers"        class="nav-link active">Customers</a>
+            <a href="/suppliers"        class="nav-link">Suppliers</a>
+            <a href="/optimizer"        class="nav-link">Optimizer</a>
+            <a href="/barcode/print"    class="nav-link">Barcodes</a>
+            <form th:action="@{/logout}" method="post" style="display:inline">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <button type="submit" class="logout-btn" id="logout-btn">⏻ Logout</button>
+            </form>
         </div>
     </header>
 
@@ -751,7 +820,7 @@
             tbody.innerHTML = '';
 
             if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">No customers found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--muted);">No customers found</td></tr>';
                 return;
             }
 
@@ -765,9 +834,9 @@
                     <tr>
                         <td><strong>${customer.customerName}</strong></td>
                         <td>
-                            <i class="fas fa-phone" style="color: var(--text-muted);"></i> ${customer.phone}<br>
+                            <i class="fas fa-phone" style="color: var(--muted);"></i> ${customer.phone}<br>
                             ${customer.customerPhone ? `<i class="fab fa-whatsapp" style="color: #25D366;"></i> ${customer.customerPhone}<br>` : ''}
-                            <small style="color: var(--text-muted);">${customer.email || 'N/A'}</small>
+                            <small style="color: var(--muted);">${customer.email || 'N/A'}</small>
                         </td>
                         <td><span class="customer-type-badge ${typeClass}">${customer.customerType}</span></td>
                         <td>${customer.city || 'N/A'}</td>
@@ -777,7 +846,7 @@
                         </td>
                         <td>
                             ${customer.totalOrders}<br>
-                            <small style="color: var(--text-muted);">₹${(customer.totalPurchaseValue || 0).toLocaleString('en-IN')}</small>
+                            <small style="color: var(--muted);">₹${(customer.totalPurchaseValue || 0).toLocaleString('en-IN')}</small>
                         </td>
                         <td>
                             <span class="badge ${customer.active ? 'bg-success' : 'bg-secondary'}">

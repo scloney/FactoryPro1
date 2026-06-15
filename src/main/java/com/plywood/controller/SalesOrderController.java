@@ -55,8 +55,15 @@ public class SalesOrderController {
      */
     @GetMapping("/api/sales-orders")
     @ResponseBody
-    public ResponseEntity<List<SalesOrder>> getAllOrders() {
+    public ResponseEntity<?> getAllOrders(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
         try {
+            if (page != null && size != null) {
+                org.springframework.data.domain.Pageable pageable = 
+                    org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by("orderDate").descending());
+                return new ResponseEntity<>(salesOrderService.getAllOrders(pageable), HttpStatus.OK);
+            }
             List<SalesOrder> orders = salesOrderService.getAllOrders();
             return new ResponseEntity<>(orders, HttpStatus.OK);
         } catch (Exception e) {
@@ -196,6 +203,7 @@ public class SalesOrderController {
      */
     @DeleteMapping("/api/sales-orders/{id}")
     @ResponseBody
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<HttpStatus> deleteOrder(@PathVariable Long id) {
         try {
             salesOrderService.deleteOrder(id);

@@ -44,4 +44,11 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
     
     @Query("SELECT SUM(po.grandTotal) FROM PurchaseOrder po WHERE po.poDate BETWEEN :startDate AND :endDate")
     Double getTotalPurchaseAmount(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    // Find POs that contain a line item for the given product, most recent first.
+    // Used by Inventory > Add Stock to let the user pick the relevant PO for a product.
+    @Query("SELECT DISTINCT po FROM PurchaseOrder po JOIN po.items i " +
+           "WHERE i.productId = :productId " +
+           "ORDER BY po.poDate DESC")
+    List<PurchaseOrder> findByProductId(@Param("productId") Long productId);
 }

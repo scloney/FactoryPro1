@@ -61,6 +61,10 @@ public class BillService {
         return billRepository.findAllByOrderByCreatedDateDesc();
     }
 
+    public org.springframework.data.domain.Page<Bill> findAll(org.springframework.data.domain.Pageable pageable) {
+        return billRepository.findAll(pageable);
+    }
+
     public Optional<Bill> findById(Long id) {
         return billRepository.findById(id);
     }

@@ -57,6 +57,51 @@ public class Bill {
     @Column(nullable = false)
     private LocalDate createdDate = LocalDate.now();
 
+    @Column(length = 50)
+    private String createdBy;
+
+    @Column(nullable = false, updatable = false, columnDefinition = "DATETIME")
+    private java.time.LocalDateTime createdAt;
+
+    @Column(nullable = false, columnDefinition = "DATETIME")
+    private java.time.LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = java.time.LocalDateTime.now();
+        this.updatedAt = java.time.LocalDateTime.now();
+        if (this.createdDate == null) {
+            this.createdDate = LocalDate.now();
+        }
+        try {
+            org.springframework.security.core.Authentication auth =
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated() && !(auth instanceof org.springframework.security.authentication.AnonymousAuthenticationToken)) {
+                this.createdBy = auth.getName();
+            } else {
+                this.createdBy = "SYSTEM";
+            }
+        } catch (Exception e) {
+            this.createdBy = "SYSTEM";
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = java.time.LocalDateTime.now();
+    }
+
+    // Getters and Setters for audit fields
+    public String getCreatedBy() { return createdBy; }
+    public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
+
+    public java.time.LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(java.time.LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public java.time.LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(java.time.LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+
     // ===== Constructors =====
 
     public Bill() {

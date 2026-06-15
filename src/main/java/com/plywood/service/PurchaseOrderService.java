@@ -90,6 +90,12 @@ public class PurchaseOrderService {
         return purchaseOrderRepository.findByPoNumber(poNumber).orElse(null);
     }
     
+    // Find POs containing a line item for the given product (most recent first).
+    // Used by Inventory > Add Stock to populate a "PO Reference" dropdown.
+    public List<PurchaseOrder> getPurchaseOrdersByProductId(Long productId) {
+        return purchaseOrderRepository.findByProductId(productId);
+    }
+    
     public List<PurchaseOrder> getAllPurchaseOrders() {
         return purchaseOrderRepository.findAll();
     }

@@ -62,6 +62,20 @@ public class MaxRectOptimizerService {
             List<Sheet> sheets = new ArrayList<>();
             int sheetNumber = 1;
 
+            // Remove pieces that can NEVER fit even on a fresh empty sheet.
+            // Without this guard, oversized pieces cause an infinite loop of empty sheets.
+            items.removeIf(r -> {
+                boolean fitsNormal  = r.getWidth()  <= sheetWidth  + EPS && r.getHeight() <= sheetHeight + EPS;
+                boolean fitsRotated = allowRotation &&
+                                      r.getHeight() <= sheetWidth  + EPS && r.getWidth()  <= sheetHeight + EPS;
+                if (!fitsNormal && !fitsRotated) {
+                    logger.warn("Skipping piece × — too large for sheet ×{}: {}x{} vs {}x{}",
+                                r.getWidth(), r.getHeight(), sheetWidth, sheetHeight);
+                    return true;
+                }
+                return false;
+            });
+
             while (!items.isEmpty()) {
                 Sheet sheet = new Sheet(sheetNumber++, sheetWidth, sheetHeight);
                 // The sheet must start with exactly one free rect covering the whole area.
@@ -82,17 +96,26 @@ public class MaxRectOptimizerService {
                             applyPlacement(sheet, rect, p);
                             it.remove();
                             placedAny = true;
-                            logger.trace("Placed {}×{} at ({},{}) rotated={}",
+                            logger.trace("Placed {}x{} at ({},{}) rotated={}",
                                          rect.getWidth(), rect.getHeight(),
                                          p.x, p.y, p.rotated);
                         }
                     }
                 } while (placedAny && !items.isEmpty());
 
-                logger.debug("Sheet #{} done — {} pieces, {:.2f}% util",
+                // Safety net: if a full fresh sheet placed nothing, remaining items
+                // will NEVER fit — break immediately instead of looping forever.
+                if (sheet.getPlacedRectangles().isEmpty()) {
+                    logger.warn("Sheet #{} placed 0 pieces — {} item(s) cannot fit, aborting.",
+                                sheet.getSheetNumber(), items.size());
+                    items.clear();
+                    break;
+                }
+
+                logger.debug("Sheet #{} done — {} pieces, {}% util",
                              sheet.getSheetNumber(),
                              sheet.getPlacedRectangles().size(),
-                             sheet.getUtilization());
+                             String.format("%.2f", sheet.getUtilization()));
                 sheets.add(sheet);
             }
 
@@ -103,8 +126,8 @@ public class MaxRectOptimizerService {
             double avgUtil     = sheets.stream().mapToDouble(Sheet::getUtilization).average().orElse(0);
             long   elapsed     = System.currentTimeMillis() - startTime;
 
-            logger.info("Done — {} sheet(s), avg util {:.2f}%, {}ms",
-                        sheets.size(), avgUtil, elapsed);
+            logger.info("Done — {} sheet(s), avg util {}%, {}ms",
+                        sheets.size(), String.format("%.2f", avgUtil), elapsed);
 
             return new OptimizationResult(sheets, sheets.size(),
                                           totalArea, usedArea, wasteArea, avgUtil, elapsed);
@@ -343,4 +366,4 @@ public class MaxRectOptimizerService {
             this.areaFit      = areaFit;
         }
     }
-}    
+}

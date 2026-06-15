@@ -45,8 +45,108 @@ public class InventoryController {
     }
     
     @GetMapping("/reports")
-    public String showReports() {
+    public String showReports(org.springframework.ui.Model model) {
+        // ── Stock valuation (all active products) ────────────────────────
+        List<Product> allActive = inventoryService.getActiveProducts();
+        double totalStockValue = allActive.stream()
+            .mapToDouble(p -> p.getCurrentStock() * p.getCostPrice()).sum();
+        double totalSellingValue = allActive.stream()
+            .mapToDouble(p -> p.getCurrentStock() * p.getSellingPrice()).sum();
+        model.addAttribute("allProducts",       allActive);
+        model.addAttribute("totalStockValue",   totalStockValue);
+        model.addAttribute("totalSellingValue", totalSellingValue);
+        model.addAttribute("totalProducts",     allActive.size());
+
+        // ── Category breakdown ───────────────────────────────────────────
+        model.addAttribute("categoryValues", inventoryService.getInventoryValueByCategory());
+
+        // ── Low-stock & reorder alerts ───────────────────────────────────
+        model.addAttribute("lowStockProducts",   inventoryService.getLowStockProducts());
+        model.addAttribute("lowStockCount",      inventoryService.getLowStockCount());
+        model.addAttribute("outOfStockCount",    inventoryService.getOutOfStockCount());
+
+        // ── Monthly revenue (last 6 months from bills) ───────────────────
+        com.plywood.repository.BillRepository billRepo =
+            inventoryService.getBillRepository();
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.time.format.DateTimeFormatter mFmt =
+            java.time.format.DateTimeFormatter.ofPattern("MMM yyyy");
+        java.util.List<String> monthLabels  = new java.util.ArrayList<>();
+        java.util.List<Double> monthRevenue = new java.util.ArrayList<>();
+        java.util.List<Long>   monthBills   = new java.util.ArrayList<>();
+        java.util.List<com.plywood.model.Bill> allBills =
+            billRepo.findAllByOrderByCreatedDateDesc();
+        for (int i = 5; i >= 0; i--) {
+            java.time.LocalDate m  = today.minusMonths(i);
+            java.time.LocalDate mS = m.withDayOfMonth(1);
+            java.time.LocalDate mE = m.withDayOfMonth(m.lengthOfMonth());
+            monthLabels.add(m.format(mFmt));
+            double rev = allBills.stream()
+                .filter(b -> b.getCreatedDate() != null
+                          && !b.getCreatedDate().isBefore(mS)
+                          && !b.getCreatedDate().isAfter(mE))
+                .mapToDouble(com.plywood.model.Bill::getGrandTotal).sum();
+            long cnt = allBills.stream()
+                .filter(b -> b.getCreatedDate() != null
+                          && !b.getCreatedDate().isBefore(mS)
+                          && !b.getCreatedDate().isAfter(mE))
+                .count();
+            monthRevenue.add(rev);
+            monthBills.add(cnt);
+        }
+        model.addAttribute("monthLabels",  monthLabels);
+        model.addAttribute("monthRevenue", monthRevenue);
+        model.addAttribute("monthBills",   monthBills);
+
+        // ── Top products by stock value (top 10) ─────────────────────────
+        java.util.List<Product> topByValue = allActive.stream()
+            .sorted(java.util.Comparator.comparingDouble(
+                (Product p) -> p.getCurrentStock() * p.getCostPrice()).reversed())
+            .limit(10)
+            .collect(java.util.stream.Collectors.toList());
+        model.addAttribute("topByStockValue", topByValue);
+
+        // ── Top selling products (by quantity sold in bills) ─────────────
+        java.util.List<Object[]> topSelling = billRepo.findTopSellingProducts(org.springframework.data.domain.PageRequest.of(0, 8));
+        model.addAttribute("topSellingProducts", topSelling);
+
+        model.addAttribute("currentMonth",
+            today.format(java.time.format.DateTimeFormatter.ofPattern("MMMM yyyy")));
+
         return "inventory-reports";
+    }
+
+    @GetMapping("/export/csv")
+    public void exportToCsv(jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
+        response.setContentType("text/csv");
+        response.setHeader(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=inventory.csv");
+        
+        List<Product> products = inventoryService.getActiveProducts();
+        
+        java.io.PrintWriter writer = response.getWriter();
+        writer.println("Product Code,Product Name,Category,Grade,Thickness,Size,Current Stock,Unit,Cost Price,Selling Price,Stock Value");
+        
+        for (Product p : products) {
+            writer.println(String.format("\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",%.2f,\"%s\",%.2f,%.2f,%.2f",
+                escapeCsv(p.getProductCode()),
+                escapeCsv(p.getName()),
+                escapeCsv(p.getCategory()),
+                escapeCsv(p.getGrade()),
+                escapeCsv(p.getThickness()),
+                escapeCsv(p.getSize()),
+                p.getCurrentStock(),
+                escapeCsv(p.getUnit()),
+                p.getCostPrice(),
+                p.getSellingPrice(),
+                p.getCurrentStock() * p.getCostPrice()
+            ));
+        }
+        writer.flush();
+    }
+
+    private String escapeCsv(String value) {
+        if (value == null) return "";
+        return value.replace("\"", "\"\"");
     }
     
     // Product API Endpoints
@@ -76,6 +176,7 @@ public class InventoryController {
     
     @DeleteMapping("/api/products/{id}")
     @ResponseBody
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
         try {
             inventoryService.deleteProduct(id);
@@ -98,7 +199,14 @@ public class InventoryController {
     
     @GetMapping("/api/products")
     @ResponseBody
-    public ResponseEntity<List<Product>> getAllProducts() {
+    public ResponseEntity<?> getAllProducts(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
+        if (page != null && size != null) {
+            org.springframework.data.domain.Pageable pageable = 
+                org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by("name").ascending());
+            return ResponseEntity.ok(inventoryService.getAllProducts(pageable));
+        }
         return ResponseEntity.ok(inventoryService.getAllProducts());
     }
     
