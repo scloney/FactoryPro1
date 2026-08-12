@@ -155,15 +155,7 @@ Open your browser and navigate to: `http://localhost:8080`
 - `GET /bill` - Bill maker page
 - `POST /bill/generate-pdf` - Generate invoice PDF
 
-## Configuration
 
-Edit `src/main/resources/application.properties`:
-
-```properties
-server.port=8080
-spring.servlet.multipart.max-file-size=10MB
-spring.servlet.multipart.max-request-size=10MB
-```
 
 ## Features in Detail
 
